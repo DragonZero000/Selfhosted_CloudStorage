@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.middleware.cors import CORSMiddleware
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic_settings import BaseSettings
@@ -33,6 +34,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def create_user(user: UserCreate):
     hashed_password = get_password_hash(user.password)
     db.insert_user_data(user.login, hashed_password)
+    return True
 
 # JWT функции
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -67,7 +69,14 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 
 # FastAPI приложение
 app = FastAPI()
-
+ori = ["http://localhost:54718"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],            # Разрешает запросы с этих адресов
+    allow_credentials=True,           # Разрешает передачу cookies и заголовков авторизации
+    allow_methods=["*"],              # Разрешает все методы (GET, POST, OPTIONS и т.д.)
+    allow_headers=["*"],              # Разрешает все заголовки
+)
 @app.post("/register")
 def register(user: UserCreate):
     db_user = db.get_user_data(user.login)

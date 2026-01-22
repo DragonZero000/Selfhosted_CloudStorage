@@ -11,7 +11,8 @@ class User(Base):
     login = Column(String, unique=True, nullable=False, index=True)
     password_hash = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), default=datetime.now)
-    size_of_memory = Column(Float)
+    storage_used = Column(Float, nullable=False, default=0)
+    size_of_memory = Column(Float, nullable=False, default=0)
 Base.metadata.create_all(bind=engine)
 
 def get_user_data(login):

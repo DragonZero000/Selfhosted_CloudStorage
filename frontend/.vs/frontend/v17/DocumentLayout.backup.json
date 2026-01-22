@@ -1,12 +1,139 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|c:\\users\\dark\\desktop\\projects\\selfhosted_cloudstorage\\frontend\\src\\pages\\login.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|solutionrelative:src\\pages\\login.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|c:\\users\\dark\\desktop\\projects\\selfhosted_cloudstorage\\frontend\\src\\app.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|solutionrelative:src\\app.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|c:\\users\\dark\\desktop\\projects\\selfhosted_cloudstorage\\frontend\\src\\app.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|solutionrelative:src\\app.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|c:\\users\\dark\\desktop\\projects\\selfhosted_cloudstorage\\frontend\\vite.config.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|solutionrelative:vite.config.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|c:\\users\\dark\\desktop\\projects\\selfhosted_cloudstorage\\frontend\\src\\main.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|solutionrelative:src\\main.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|c:\\users\\dark\\desktop\\projects\\selfhosted_cloudstorage\\frontend\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|solutionrelative:index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|c:\\users\\dark\\desktop\\projects\\selfhosted_cloudstorage\\frontend\\src\\index.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|solutionrelative:src\\index.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "login.jsx",
+              "DocumentMoniker": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\src\\pages\\login.jsx",
+              "RelativeDocumentMoniker": "src\\pages\\login.jsx",
+              "ToolTip": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\src\\pages\\login.jsx",
+              "RelativeToolTip": "src\\pages\\login.jsx",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB8AAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2026-01-21T10:13:46.529Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "App.css",
+              "DocumentMoniker": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\src\\App.css",
+              "RelativeDocumentMoniker": "src\\App.css",
+              "ToolTip": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\src\\App.css",
+              "RelativeToolTip": "src\\App.css",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAATAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2026-01-19T11:14:41.312Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "vite.config.js",
+              "DocumentMoniker": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\vite.config.js",
+              "RelativeDocumentMoniker": "vite.config.js",
+              "ToolTip": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\vite.config.js",
+              "RelativeToolTip": "vite.config.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-01-19T12:50:28.347Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "App.jsx",
+              "DocumentMoniker": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\src\\App.jsx",
+              "RelativeDocumentMoniker": "src\\App.jsx",
+              "ToolTip": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\src\\App.jsx",
+              "RelativeToolTip": "src\\App.jsx",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2026-01-19T11:14:40.535Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "main.jsx",
+              "DocumentMoniker": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\src\\main.jsx",
+              "RelativeDocumentMoniker": "src\\main.jsx",
+              "ToolTip": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\src\\main.jsx",
+              "RelativeToolTip": "src\\main.jsx",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2026-01-19T11:14:38.246Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "index.html",
+              "DocumentMoniker": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\index.html",
+              "RelativeDocumentMoniker": "index.html",
+              "ToolTip": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\index.html",
+              "RelativeToolTip": "index.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-01-19T11:13:59.255Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "index.css",
+              "DocumentMoniker": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\src\\index.css",
+              "RelativeDocumentMoniker": "src\\index.css",
+              "ToolTip": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\src\\index.css",
+              "RelativeToolTip": "src\\index.css",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2026-01-19T11:14:39.591Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }
