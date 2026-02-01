@@ -22,7 +22,7 @@ function Login() {
         setIsLoading(true)
         try {
             console.log(formData.login, "yugfv1")
-            const result = await api.post('/token', new URLSearchParams({ username: formData.login, password: formData.password }),
+            const result = await api.post('/token', new URLSearchParams({ username: formData.login, password: formData.password, grant_type: "password" }),
                 {
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 })

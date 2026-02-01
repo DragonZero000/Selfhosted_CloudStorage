@@ -11,10 +11,6 @@
       "RelativeMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|solutionrelative:src\\app.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|c:\\users\\dark\\desktop\\projects\\selfhosted_cloudstorage\\frontend\\src\\app.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
-      "RelativeMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|solutionrelative:src\\app.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|c:\\users\\dark\\desktop\\projects\\selfhosted_cloudstorage\\frontend\\vite.config.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
       "RelativeMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|solutionrelative:vite.config.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
@@ -29,6 +25,10 @@
     {
       "AbsoluteMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|c:\\users\\dark\\desktop\\projects\\selfhosted_cloudstorage\\frontend\\src\\index.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
       "RelativeMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|solutionrelative:src\\index.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|c:\\users\\dark\\desktop\\projects\\selfhosted_cloudstorage\\frontend\\src\\app.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{D33E6FF8-39CB-D302-5098-6F7BD15AA171}|frontend.esproj|solutionrelative:src\\app.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
     }
   ],
   "DocumentGroupContainers": [
@@ -48,14 +48,14 @@
               "RelativeDocumentMoniker": "src\\pages\\login.jsx",
               "ToolTip": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\src\\pages\\login.jsx",
               "RelativeToolTip": "src\\pages\\login.jsx",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB8AAAAUAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
               "WhenOpened": "2026-01-21T10:13:46.529Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 6,
               "Title": "App.css",
               "DocumentMoniker": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\src\\App.css",
               "RelativeDocumentMoniker": "src\\App.css",
@@ -63,12 +63,11 @@
               "RelativeToolTip": "src\\App.css",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAATAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
-              "WhenOpened": "2026-01-19T11:14:41.312Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-19T11:14:41.312Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 2,
               "Title": "vite.config.js",
               "DocumentMoniker": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\vite.config.js",
               "RelativeDocumentMoniker": "vite.config.js",
@@ -76,8 +75,7 @@
               "RelativeToolTip": "vite.config.js",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2026-01-19T12:50:28.347Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-19T12:50:28.347Z"
             },
             {
               "$type": "Document",
@@ -87,14 +85,13 @@
               "RelativeDocumentMoniker": "src\\App.jsx",
               "ToolTip": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\src\\App.jsx",
               "RelativeToolTip": "src\\App.jsx",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
-              "WhenOpened": "2026-01-19T11:14:40.535Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-19T11:14:40.535Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 3,
               "Title": "main.jsx",
               "DocumentMoniker": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\src\\main.jsx",
               "RelativeDocumentMoniker": "src\\main.jsx",
@@ -102,34 +99,31 @@
               "RelativeToolTip": "src\\main.jsx",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
-              "WhenOpened": "2026-01-19T11:14:38.246Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-19T11:14:38.246Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 4,
               "Title": "index.html",
               "DocumentMoniker": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\index.html",
               "RelativeDocumentMoniker": "index.html",
               "ToolTip": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\index.html",
               "RelativeToolTip": "index.html",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAcAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
-              "WhenOpened": "2026-01-19T11:13:59.255Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-19T11:13:59.255Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 5,
               "Title": "index.css",
               "DocumentMoniker": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\src\\index.css",
               "RelativeDocumentMoniker": "src\\index.css",
               "ToolTip": "C:\\Users\\Dark\\Desktop\\Projects\\Selfhosted_CloudStorage\\frontend\\src\\index.css",
               "RelativeToolTip": "src\\index.css",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAUAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACkAAAAGAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
-              "WhenOpened": "2026-01-19T11:14:39.591Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-19T11:14:39.591Z"
             }
           ]
         }

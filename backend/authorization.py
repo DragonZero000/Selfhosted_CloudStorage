@@ -5,11 +5,12 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from pydantic_settings import BaseSettings
 from pydantic import BaseModel
 import db
 from db import User
+from argon2 import PasswordHasher, exceptions
+import argon2
 
 class Settings(BaseSettings):
     SECRET_KEY: str = "hs256"
@@ -22,14 +23,27 @@ class UserCreate(BaseModel):
 
 settings = Settings()
 
-# CRUD функции
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+ph = PasswordHasher(
+    time_cost=2,
+    memory_cost=102400,     # 100 MiB
+    parallelism=8,
+    hash_len=32,
+    salt_len=16,
+    encoding='utf-8',
+    type=argon2.Type.ID,    # Argon2id
+)
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    return ph.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        ph.verify(hashed_password, plain_password)
+        return True
+    except exceptions.VerifyMismatchError:
+        return False
+    except exceptions.InvalidHashError:
+        return False
 
 def create_user(user: UserCreate):
     hashed_password = get_password_hash(user.password)
@@ -69,11 +83,11 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 
 # FastAPI приложение
 app = FastAPI()
-ori = ["http://localhost:54718"]
+ori = ["http://localhost:54718", "http://127.0.0.1:54718"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*'],            # Разрешает запросы с этих адресов
-    allow_credentials=True,           # Разрешает передачу cookies и заголовков авторизации
+    allow_origins=["*"],            # Разрешает запросы с этих адресов
+    allow_credentials=False,           # Разрешает передачу cookies и заголовков авторизации
     allow_methods=["*"],              # Разрешает все методы (GET, POST, OPTIONS и т.д.)
     allow_headers=["*"],              # Разрешает все заголовки
 )
@@ -90,14 +104,14 @@ def register(user: UserCreate):
 @app.post("/token")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
     user = db.get_user_data(form_data.username)
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect login or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
+    access_token = create_access_token(data={"sub": user.login}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/users/me")

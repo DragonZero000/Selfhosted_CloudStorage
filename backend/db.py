@@ -1,3 +1,6 @@
+import argon2
+from argon2 import PasswordHasher, exceptions
+
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Float, insert, select
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from datetime import datetime
@@ -27,10 +30,32 @@ def get_users_data():
     session.close()
     return result
 
+
+
+ph = PasswordHasher(
+    time_cost=2,
+    memory_cost=102400,     # 100 MiB
+    parallelism=8,
+    hash_len=32,
+    salt_len=16,
+    encoding='utf-8',
+    type=argon2.Type.ID,    # Argon2id
+)
+
+def get_password_hash(password: str) -> str:
+    return ph.hash(password)
+
+
+
+
+
+
+
 def insert_user_data(login, password, size_of_memory=0):
     session = SessionLocal()
+    password_hash = get_password_hash(password)
     try:
-        session.add(User(login=login, password_hash=password, created_at=datetime.now(), size_of_memory=size_of_memory))
+        session.add(User(login=login, password_hash=password_hash, created_at=datetime.now(), size_of_memory=size_of_memory))
         session.commit()
     except Exception as e:
         session.rollback()
