@@ -1,6 +1,5 @@
 import argon2
 from argon2 import PasswordHasher, exceptions
-
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Float, insert, select
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from datetime import datetime
@@ -30,8 +29,6 @@ def get_users_data():
     session.close()
     return result
 
-
-
 ph = PasswordHasher(
     time_cost=2,
     memory_cost=102400,     # 100 MiB
@@ -44,12 +41,6 @@ ph = PasswordHasher(
 
 def get_password_hash(password: str) -> str:
     return ph.hash(password)
-
-
-
-
-
-
 
 def insert_user_data(login, password, size_of_memory=0):
     session = SessionLocal()
@@ -93,7 +84,6 @@ if __name__ == "__main__":
             for user in res:
                 print(user.id ,user.login, user.created_at, user.size_of_memory)
         elif command == "insert_user_data":
-            print("debug version") # отредактировать данное исполнение комманды
             login = input("Login: ")
             password = input("Password: ")
             size_of_memory = input("Size of memory: ")
