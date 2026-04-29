@@ -1,105 +1,208 @@
 import argon2
-from argon2 import PasswordHasher, exceptions
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Float, insert, select
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from argon2 import PasswordHasher
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Float, ForeignKey
+from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 from datetime import datetime
+import os
+
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:pass@localhost:5432/appdb")
 
 Base = declarative_base()
-engine = create_engine("postgresql://postgres:pass@localhost:5432/appdb")
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
+
+
+# ─── Models ──────────────────────────────────────────────────────────────────
+
 class User(Base):
     __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    login = Column(String, unique=True, nullable=False, index=True)
-    password_hash = Column(String, nullable=False)
-    created_at = Column(DateTime(timezone=True), default=datetime.now)
-    storage_used = Column(Float, nullable=False, default=0)
-    size_of_memory = Column(Float, nullable=False, default=0)
+    id              = Column(Integer, primary_key=True, autoincrement=True)
+    login           = Column(String, unique=True, nullable=False, index=True)
+    password_hash   = Column(String, nullable=False)
+    created_at      = Column(DateTime, default=datetime.now)
+    storage_used    = Column(Float, nullable=False, default=0)
+    size_of_memory  = Column(Float, nullable=False, default=10)
+    files           = relationship("File", back_populates="user", cascade="all, delete-orphan")
+
+
+class File(Base):
+    __tablename__ = "files"
+    id          = Column(Integer, primary_key=True, autoincrement=True)
+    user_id     = Column(Integer, ForeignKey("users.id"), nullable=False)
+    file_name   = Column(String, nullable=False)
+    s3_key      = Column(String, nullable=False, unique=True)
+    file_size   = Column(Float, nullable=False, default=0)
+    uploaded_at = Column(DateTime, default=datetime.now)
+    user        = relationship("User", back_populates="files")
+
+
 Base.metadata.create_all(bind=engine)
 
-def get_user_data(login):
-    session = SessionLocal()
-    result = session.query(User).filter_by(login=login).first()
-    session.close()
-    return result
 
-def get_users_data():
-    session = SessionLocal()
-    result = session.query(User).all()
-    session.close()
-    return result
+# ─── Password hashing ─────────────────────────────────────────────────────────
 
 ph = PasswordHasher(
     time_cost=2,
-    memory_cost=102400,     # 100 MiB
+    memory_cost=102400,
     parallelism=8,
     hash_len=32,
     salt_len=16,
-    encoding='utf-8',
-    type=argon2.Type.ID,    # Argon2id
+    encoding="utf-8",
+    type=argon2.Type.ID,
 )
+
 
 def get_password_hash(password: str) -> str:
     return ph.hash(password)
 
-def insert_user_data(login, password, size_of_memory=0):
+
+# ─── User CRUD ────────────────────────────────────────────────────────────────
+
+def get_user_data(login: str):
     session = SessionLocal()
-    password_hash = get_password_hash(password)
     try:
-        session.add(User(login=login, password_hash=password_hash, created_at=datetime.now(), size_of_memory=size_of_memory))
-        session.commit()
-    except Exception as e:
-        session.rollback()
-        print(e)
+        return session.query(User).filter_by(login=login).first()
     finally:
         session.close()
 
-def delete_user_data(login):
+
+def get_users_data():
     session = SessionLocal()
-    user = session.query(User).filter_by(login=login).first()
-    if not user:
-        print("user not found")
-        return
-    confirmation = input("Are you sure you want to delete this user? (y/N): ").strip() or "N"
-    if confirmation == "y" or confirmation == "Y":
-        session.delete(user)
+    try:
+        return session.query(User).all()
+    finally:
+        session.close()
+
+
+def insert_user_data(login: str, password_hash: str, size_of_memory: float = 10):
+    """password_hash must already be hashed by the caller."""
+    session = SessionLocal()
+    try:
+        session.add(User(
+            login=login,
+            password_hash=password_hash,
+            created_at=datetime.now(),
+            size_of_memory=size_of_memory,
+        ))
         session.commit()
-    elif confirmation == "n" or confirmation == "N":
+    except Exception as e:
         session.rollback()
-    else:
-        print("Invalid input")
-        return
-    session.close()
+        raise e
+    finally:
+        session.close()
+
+
+def delete_user_data(login: str):
+    session = SessionLocal()
+    try:
+        user = session.query(User).filter_by(login=login).first()
+        if not user:
+            print("User not found")
+            return
+        confirmation = input("Delete this user? (y/N): ").strip().lower() or "n"
+        if confirmation == "y":
+            session.delete(user)
+            session.commit()
+        else:
+            session.rollback()
+    finally:
+        session.close()
+
+
+def update_user_storage(user_id: int, delta: float):
+    session = SessionLocal()
+    try:
+        user = session.query(User).filter_by(id=user_id).first()
+        if user:
+            user.storage_used = max(0, (user.storage_used or 0) + delta)
+            session.commit()
+    except Exception:
+        session.rollback()
+    finally:
+        session.close()
+
+
+# ─── File CRUD ────────────────────────────────────────────────────────────────
+
+def get_user_files(user_id: int):
+    session = SessionLocal()
+    try:
+        return session.query(File).filter_by(user_id=user_id).order_by(File.uploaded_at.desc()).all()
+    finally:
+        session.close()
+
+
+def get_file(file_id: int, user_id: int):
+    session = SessionLocal()
+    try:
+        return session.query(File).filter_by(id=file_id, user_id=user_id).first()
+    finally:
+        session.close()
+
+
+def insert_file(user_id: int, file_name: str, s3_key: str, file_size: float = 0):
+    session = SessionLocal()
+    try:
+        f = File(user_id=user_id, file_name=file_name, s3_key=s3_key, file_size=file_size)
+        session.add(f)
+        user = session.query(User).filter_by(id=user_id).first()
+        if user:
+            user.storage_used = (user.storage_used or 0) + file_size
+        session.commit()
+        session.refresh(f)
+        return f
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
+
+
+def delete_file_record(file_id: int, user_id: int) -> bool:
+    session = SessionLocal()
+    try:
+        f = session.query(File).filter_by(id=file_id, user_id=user_id).first()
+        if not f:
+            return False
+        file_size = f.file_size
+        session.delete(f)
+        user = session.query(User).filter_by(id=user_id).first()
+        if user:
+            user.storage_used = max(0, (user.storage_used or 0) - file_size)
+        session.commit()
+        return True
+    except Exception:
+        session.rollback()
+        return False
+    finally:
+        session.close()
+
+
+# ─── CLI ─────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    print("Input command: ", end="")
-    command = input()
-    while command != "exit":
-        if command == "get_user_data":
+    print("Commands: get_user | get_users | add_user | del_user | exit")
+    while True:
+        command = input("> ").strip()
+        if command == "exit":
+            break
+        elif command == "get_user":
             login = input("Login: ")
-            res = get_user_data(login)
-            print(res.id, res.login, res.created_at, res.size_of_memory)
-        elif command == "get_users_data":
-            res = get_users_data()
-            for user in res:
-                print(user.id ,user.login, user.created_at, user.size_of_memory)
-        elif command == "insert_user_data":
-            login = input("Login: ")
-            password = input("Password: ")
-            size_of_memory = input("Size of memory: ")
-            if size_of_memory == "":
-                insert_user_data(login, password)
+            u = get_user_data(login)
+            if u:
+                print(f"[{u.id}] {u.login}  created={u.created_at}  used={u.storage_used}B")
             else:
-                insert_user_data(login, password, size_of_memory)
-        elif command == "delete_user_data":
+                print("Not found")
+        elif command == "get_users":
+            for u in get_users_data():
+                print(f"[{u.id}] {u.login}  created={u.created_at}  used={u.storage_used}B max_size={u.size_of_memory}")
+        elif command == "add_user":
+            login    = input("Login: ")
+            password = input("Password: ")
+            insert_user_data(login, get_password_hash(password))
+            print("Done")
+        elif command == "del_user":
             login = input("Login: ")
             delete_user_data(login)
-        elif command == "command_list" or command == "help":
-            print("get_user_data")
-            print("get_users_data")
-            print("insert_user_data")
-            print("delete_user_data")
         else:
-            print("Invalid command")
-        print("Input command: ", end="")
-        command = input()
+            print("Unknown command")

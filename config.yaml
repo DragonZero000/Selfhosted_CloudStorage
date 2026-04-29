@@ -1,0 +1,16 @@
+# CloudStorage configuration
+server:
+  host: "0.0.0.0"
+  port: 8000
+  secret_key: "CHANGE_THIS_SECRET_KEY_IN_PRODUCTION"
+  token_expire_minutes: 60
+
+database:
+  url: "postgresql://postgres:pass@localhost:5432/appdb"
+
+minio:
+  internal_url: "http://minio:9000"    # server → MinIO (in Docker: service name)
+  public_url: "http://localhost:9000"  # browser → MinIO (must be reachable from client)
+  access_key: "minioadmin"
+  secret_key: "miniopass"
+  bucket: "CloudStorage"
