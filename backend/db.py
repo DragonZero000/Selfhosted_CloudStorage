@@ -21,7 +21,7 @@ class User(Base):
     password_hash   = Column(String, nullable=False)
     created_at      = Column(DateTime, default=datetime.now)
     storage_used    = Column(Float, nullable=False, default=0)
-    size_of_memory  = Column(Float, nullable=False, default=10)
+    size_of_memory  = Column(Float, nullable=False, default=0)
     files           = relationship("File", back_populates="user", cascade="all, delete-orphan")
 
 
@@ -74,7 +74,7 @@ def get_users_data():
         session.close()
 
 
-def insert_user_data(login: str, password_hash: str, size_of_memory: float = 10):
+def insert_user_data(login: str, password_hash: str, size_of_memory: float = 0):
     """password_hash must already be hashed by the caller."""
     session = SessionLocal()
     try:
@@ -199,7 +199,13 @@ if __name__ == "__main__":
         elif command == "add_user":
             login    = input("Login: ")
             password = input("Password: ")
-            insert_user_data(login, get_password_hash(password))
+            size_of_storage = input("Size of storage: ").strip()
+            if size_of_storage.isdigit():
+                #size_of_storage = size_of_storage*1024
+                print(size_of_storage)
+                insert_user_data(login, get_password_hash(password), int(size_of_storage))
+            else:                
+                insert_user_data(login, get_password_hash(password))
             print("Done")
         elif command == "del_user":
             login = input("Login: ")

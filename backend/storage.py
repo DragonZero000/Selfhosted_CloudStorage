@@ -12,7 +12,7 @@ router = APIRouter(prefix="/files", tags=["files"])
 # MinIO / S3 config
 MINIO_INTERNAL = os.getenv("MINIO_INTERNAL_URL", "http://minio:9000")
 MINIO_PUBLIC   = os.getenv("MINIO_PUBLIC_URL",   "http://localhost:9000")
-BUCKET         = os.getenv("S3_BUCKET", "CloudStorage")
+BUCKET         = os.getenv("S3_BUCKET", "cloudstorage")
 ACCESS_KEY     = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
 SECRET_KEY     = os.getenv("MINIO_SECRET_KEY", "miniopass")
 
@@ -34,10 +34,16 @@ s3_public = boto3.client(
 
 
 def _ensure_bucket():
+    """Вызывается один раз при старте — просто проверяет/создаёт бакет."""
     try:
-        s3.head_bucket(Bucket=BUCKET)
-    except ClientError:
-        s3.create_bucket(Bucket=BUCKET)
+        existing = [b["Name"] for b in s3.list_buckets().get("Buckets", [])]
+        if BUCKET not in existing:
+            s3.create_bucket(Bucket=BUCKET)
+            print(f"Bucket '{BUCKET}' created.")
+        else:
+            print(f"Bucket '{BUCKET}' already exists.")
+    except Exception as e:
+        print(f"Warning: could not ensure bucket: {e}")
 
 
 # ─── Endpoints ────────────────────────────────────────────────────────────────
@@ -62,7 +68,6 @@ def get_upload_url(
     file_size: float = 0,
     current_user: User = Depends(get_current_user),
 ):
-    _ensure_bucket()
     s3_key = f"{current_user.login}/{file_name}"
 
     # Check for duplicate key → append timestamp
