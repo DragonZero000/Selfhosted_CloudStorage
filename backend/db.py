@@ -121,6 +121,32 @@ def update_user_storage(user_id: int, delta: float):
     finally:
         session.close()
 
+def update_user_by_login(login: str, **kwargs):
+    """
+    Обновляет данные пользователя, находя его по логину.
+    Запрещенные для редактирования поля: id, storage_used, files.
+    """
+    session = SessionLocal()
+    # Список полей, которые нельзя менять этой функцией
+    protected_fields = {"id", "storage_used", "files"}    
+    try:
+        # Ищем пользователя по логину
+        user = session.query(User).filter_by(login=login).first()        
+        if not user:
+            print(f"User '{login}' not found")
+            return False        
+        # Обновляем только разрешенные поля, которые есть в модели
+        for key, value in kwargs.items():
+            if key not in protected_fields and hasattr(user, key):
+                setattr(user, key, value)        
+        session.commit()
+        return True
+    except Exception as e:
+        session.rollback()
+        print(f"Error updating user: {e}")
+        return False
+    finally:
+        session.close()
 
 # ─── File CRUD ────────────────────────────────────────────────────────────────
 
@@ -181,7 +207,7 @@ def delete_file_record(file_id: int, user_id: int) -> bool:
 # ─── CLI ─────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    print("Commands: get_user | get_users | add_user | del_user | exit")
+    print("Commands: get_user | get_users | add_user | del_user | update_user | exit")
     while True:
         command = input("> ").strip()
         if command == "exit":
@@ -210,5 +236,23 @@ if __name__ == "__main__":
         elif command == "del_user":
             login = input("Login: ")
             delete_user_data(login)
+        elif command == "update_user":
+            login = input("Target Login: ")
+            new_login = input("New Login (skip with Enter): ").strip()
+            new_mem = input("New Memory Size (skip with Enter): ").strip()
+
+            updates = {}
+            if new_login: 
+                updates['login'] = new_login
+            if new_mem.isdigit(): 
+                updates['size_of_memory'] = float(new_mem)
+
+            if updates:
+                if update_user_by_login(login, **updates):
+                    print("Successfully updated")
+                else:
+                    print("Update failed")
+            else:
+                print("No changes provided")
         else:
             print("Unknown command")

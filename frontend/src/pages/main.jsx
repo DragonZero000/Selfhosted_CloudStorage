@@ -161,7 +161,7 @@ function Main() {
   );
 
   // ── Storage bar ───────────────────────────────────────────────────────────────
-  const usedBytes  = user?.storage_used  || 0;
+  const usedBytes = files.reduce((acc, file) => acc + (file.file_size || 0), 0);
   const limitBytes = user?.size_of_memory || 0;
   const usedPct    = limitBytes > 0 ? Math.min(100, (usedBytes / limitBytes) * 100) : 0;
 
