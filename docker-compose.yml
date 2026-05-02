@@ -1,6 +1,6 @@
-version: '3.9'
-
 services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
     container_name: CloudStorage-postgres
@@ -9,8 +9,6 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: pass
       POSTGRES_DB: appdb
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -19,6 +17,7 @@ services:
       timeout: 5s
       retries: 5
 
+  # ── MinIO ───────────────────────────────────────────────────────────────────
   minio:
     image: minio/minio:latest
     container_name: CloudStorage-minio
@@ -28,19 +27,19 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: miniopass
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9001:9001"   # MinIO Console — только для администрирования
     volumes:
       - minio_data:/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
+      interval: 15s
+      timeout: 10s
+      retries: 5
 
+  # ── Создание бакета при старте ──────────────────────────────────────────────
   createbucket:
     image: minio/mc
-    container_name: CloudStorage-minio-mc
+    container_name: CloudStorage-minio-init
     restart: "no"
     depends_on:
       minio:
@@ -48,9 +47,49 @@ services:
     entrypoint: >
       /bin/sh -c "
       mc alias set myminio http://minio:9000 minioadmin miniopass;
-      mc mb --ignore-existing myminio/CloudStorage || true;
-      mc policy set download myminio/CloudStorage;
+      mc mb --ignore-existing myminio/cloudstorage;
+      echo 'Bucket ready';
       "
+
+  # ── Backend (FastAPI) ────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: CloudStorage-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL:       postgresql://postgres:pass@postgres:5432/appdb
+      MINIO_INTERNAL_URL: http://minio:9000
+      MINIO_PUBLIC_URL:   http://minio:9000   # внутри Docker всё ходит через backend
+      MINIO_ACCESS_KEY:   minioadmin
+      MINIO_SECRET_KEY:   miniopass
+      S3_BUCKET:          cloudstorage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ── Frontend (React → nginx) ─────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+    container_name: CloudStorage-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"     # Основной вход — открываем браузер на http://localhost
+    depends_on:
+      backend:
+        condition: service_healthy
 
 volumes:
   postgres_data:
@@ -58,4 +97,4 @@ volumes:
 
 networks:
   default:
-    name: minio-postgres-network
+    name: cloudstorage-network

@@ -89,29 +89,32 @@ def get_upload_url(
     return {"upload_url": url, "key": s3_key, "file_id": file_record.id}
 
 
-@router.get("/download/{file_id}", summary="Get presigned GET URL for download")
-def get_download_url(
+@router.get("/download/{file_id}", summary="Download file streamed through backend")
+def download_file(
     file_id: int,
     current_user: User = Depends(get_current_user),
 ):
+    from fastapi.responses import StreamingResponse
+    import urllib.parse
+
     file = db.get_file(file_id, current_user.id)
     if not file:
         raise HTTPException(status_code=404, detail="File not found")
 
     try:
-        url = s3_public.generate_presigned_url(
-            "get_object",
-            Params={
-                "Bucket": BUCKET,
-                "Key":    file.s3_key,
-                "ResponseContentDisposition": f'attachment; filename="{file.file_name}"',
-            },
-            ExpiresIn=300,
-        )
+        obj = s3.get_object(Bucket=BUCKET, Key=file.s3_key)
     except ClientError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    return {"download_url": url, "file_name": file.file_name}
+    encoded_name = urllib.parse.quote(file.file_name, safe="")
+    return StreamingResponse(
+        obj["Body"].iter_chunks(chunk_size=1024 * 1024),
+        media_type=obj.get("ContentType", "application/octet-stream"),
+        headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_name}",
+            "Content-Length": str(obj.get("ContentLength", "")),
+        },
+    )
 
 
 @router.delete("/{file_id}", summary="Delete a file")

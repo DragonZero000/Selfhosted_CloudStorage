@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const api = axios.create({ baseURL: "http://127.0.0.1:8000", timeout: 30000 });
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || "http://127.0.0.1:8000", timeout: 30000 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -88,24 +88,22 @@ function Main() {
       try {
         setUploadProg({ name: file.name, pct: 0 });
 
-        // 1. Get presigned PUT URL
-        const res = await api.post(
-          `/files/upload-url?file_name=${encodeURIComponent(file.name)}&file_size=${file.size}`,
-          null,
-          { headers: authHeader() }
-        );
-        const { upload_url } = res.data;
+        const formData = new FormData();
+        formData.append("file", file);
 
-        // 2. PUT directly to MinIO
-        await axios.put(upload_url, file, {
-          headers: { "Content-Type": file.type || "application/octet-stream" },
+        await api.post("/files/upload", formData, {
+          headers: {
+            ...authHeader(),
+            "Content-Type": "multipart/form-data",
+          },
           onUploadProgress: (e) => {
             const pct = Math.round((e.loaded / e.total) * 100);
             setUploadProg({ name: file.name, pct });
           },
         });
-      } catch {
+      } catch (err) {
         setError(`Ошибка загрузки: ${file.name}`);
+        console.error(err);
       }
     }
 
@@ -117,11 +115,16 @@ function Main() {
   // ── Download ─────────────────────────────────────────────────────────────────
   const downloadFile = async (fileId, fileName) => {
     try {
-      const res = await api.get(`/files/download/${fileId}`, { headers: authHeader() });
+      const res = await api.get(`/files/download/${fileId}`, {
+        headers: authHeader(),
+        responseType: "blob",
+      });
+      const url = URL.createObjectURL(res.data);
       const a = document.createElement("a");
-      a.href = res.data.download_url;
+      a.href = url;
       a.download = fileName;
       a.click();
+      URL.revokeObjectURL(url);
     } catch {
       setError("Ошибка скачивания файла");
     }
