@@ -1,0 +1,10 @@
+darkoktestserver.twilightparadox.com {
+    # Фронтенд
+    reverse_proxy frontend:80
+
+    # API → бэкенд (убираем /api префикс)
+    handle /api/* {
+        uri strip_prefix /api
+        reverse_proxy backend:8000
+    }
+}
