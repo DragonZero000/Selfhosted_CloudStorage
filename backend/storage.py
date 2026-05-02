@@ -1,7 +1,7 @@
 import os
 import boto3
 from botocore.exceptions import ClientError
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File as FastAPIFile, status
 
 import db
 from authorization import get_current_user
@@ -62,31 +62,34 @@ def list_files(current_user: User = Depends(get_current_user)):
     ]
 
 
-@router.post("/upload-url", summary="Get presigned PUT URL for direct upload")
-def get_upload_url(
-    file_name: str,
-    file_size: float = 0,
+@router.post("/upload", summary="Upload file via backend")
+def upload_file(
+    file: UploadFile = FastAPIFile(...),
     current_user: User = Depends(get_current_user),
 ):
-    s3_key = f"{current_user.login}/{file_name}"
+    import io, time
+    s3_key = f"{current_user.login}/{file.filename}"
 
-    # Check for duplicate key → append timestamp
     existing = [f for f in db.get_user_files(current_user.id) if f.s3_key == s3_key]
     if existing:
-        import time
-        s3_key = f"{current_user.login}/{int(time.time())}_{file_name}"
+        s3_key = f"{current_user.login}/{int(time.time())}_{file.filename}"
+
+    contents = file.file.read()
+    file_size = len(contents)
 
     try:
-        url = s3_public.generate_presigned_url(
-            "put_object",
-            Params={"Bucket": BUCKET, "Key": s3_key},
-            ExpiresIn=300,
+        s3.put_object(
+            Bucket=BUCKET,
+            Key=s3_key,
+            Body=io.BytesIO(contents),
+            ContentLength=file_size,
+            ContentType=file.content_type or "application/octet-stream",
         )
-    except ClientError as e:
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    file_record = db.insert_file(current_user.id, file_name, s3_key, file_size)
-    return {"upload_url": url, "key": s3_key, "file_id": file_record.id}
+    file_record = db.insert_file(current_user.id, file.filename, s3_key, file_size)
+    return {"file_id": file_record.id, "file_name": file.filename, "file_size": file_size}
 
 
 @router.get("/download/{file_id}", summary="Download file streamed through backend")

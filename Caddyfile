@@ -1,10 +1,18 @@
 darkoktestserver.twilightparadox.com {
-    # Фронтенд
-    reverse_proxy frontend:80
+    log {
+        output stderr
+        level DEBUG
+    }
 
-    # API → бэкенд (убираем /api префикс)
     handle /api/* {
         uri strip_prefix /api
+        request_body {
+            max_size 5GB
+        }
         reverse_proxy backend:8000
+    }
+
+    handle {
+        reverse_proxy frontend:80
     }
 }
