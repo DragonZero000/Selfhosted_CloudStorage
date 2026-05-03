@@ -102,7 +102,21 @@ function Main() {
           },
         });
       } catch (err) {
-        setError(`Ошибка загрузки: ${file.name}`);
+        if (axios.isAxiosError(err)) {
+          const s = err.response?.status;
+          const d = err.response?.data?.detail;
+          if (s === 403 && d?.error === "storage_blocked") {
+            setError("Загрузка заблокирована. Обратитесь к администратору.");
+          } else if (s === 413 && d?.error === "storage_limit_exceeded") {
+            const free = formatSize(d.free);
+            const need = formatSize(d.file_size);
+            setError(`Недостаточно места: нужно ${need}, свободно ${free}`);
+          } else {
+            setError(`Ошибка загрузки: ${file.name}`);
+          }
+        } else {
+          setError(`Ошибка загрузки: ${file.name}`);
+        }
         console.error(err);
       }
     }

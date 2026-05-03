@@ -1,4 +1,3 @@
-# import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -15,9 +14,13 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    SECRET_KEY: str = "hs256"
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    SECRET_KEY:                  str   = "hs256"
+    ALGORITHM:                   str   = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int   = 30
+    # Лимит хранилища по умолчанию для новых пользователей (в байтах).
+    # 0 = загрузка заблокирована до ручного назначения лимита администратором.
+    # Задаётся через переменную окружения DEFAULT_STORAGE_BYTES в .env
+    DEFAULT_STORAGE_BYTES:       float = 0
 
 
 class UserCreate(BaseModel):
@@ -29,12 +32,12 @@ settings = Settings()
 
 ph = PasswordHasher(
     time_cost=2,
-    memory_cost=102400,  # 100 MiB
+    memory_cost=102400,
     parallelism=8,
     hash_len=32,
     salt_len=16,
     encoding="utf-8",
-    type=argon2.Type.ID,  # Argon2id
+    type=argon2.Type.ID,
 )
 
 
@@ -54,11 +57,17 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def create_user(user: UserCreate):
     hashed_password = get_password_hash(user.password)
-    db.insert_user_data(user.login, hashed_password)
+    # Новый пользователь получает лимит из настроек (по умолчанию 0 = заблокировано)
+    db.insert_user_data(
+        user.login,
+        hashed_password,
+        size_of_memory=settings.DEFAULT_STORAGE_BYTES,
+    )
     return True
 
 
-# JWT функции
+# ─── JWT ──────────────────────────────────────────────────────────────────────
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
@@ -71,10 +80,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(
-        to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
-    )
-    return encoded_jwt
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
@@ -84,9 +90,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
@@ -98,15 +102,15 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     return user
 
 
-# FastAPI приложение
+# ─── FastAPI app ──────────────────────────────────────────────────────────────
+
 app = FastAPI()
-ori = ["http://localhost:54718", "http://127.0.0.1:54718"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Разрешает запросы с этих адресов
-    allow_credentials=False,  # Разрешает передачу cookies и заголовков авторизации
-    allow_methods=["*"],  # Разрешает все методы (GET, POST, OPTIONS и т.д.)
-    allow_headers=["*"],  # Разрешает все заголовки
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -115,8 +119,7 @@ def register(user: UserCreate):
     db_user = db.get_user_data(user.login)
     if db_user:
         raise HTTPException(status_code=400, detail="Login already registered")
-    new_user = create_user(user)
-    if not new_user:
+    if not create_user(user):
         raise HTTPException(status_code=400, detail="Failed to create user")
     return {"msg": "User created"}
 
@@ -130,9 +133,9 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
             detail="Incorrect login or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.login}, expires_delta=access_token_expires
+        data={"sub": user.login},
+        expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -140,6 +143,3 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 @app.get("/users/me")
 def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
-
-
-# Запуск: uvicorn app:app --reload

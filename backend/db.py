@@ -12,17 +12,17 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 
 
-# ─── Models ──────────────────────────────────────────────────────────────────
+# ─── Models ───────────────────────────────────────────────────────────────────
 
 class User(Base):
     __tablename__ = "users"
-    id              = Column(Integer, primary_key=True, autoincrement=True)
-    login           = Column(String, unique=True, nullable=False, index=True)
-    password_hash   = Column(String, nullable=False)
-    created_at      = Column(DateTime, default=datetime.now)
-    storage_used    = Column(Float, nullable=False, default=0)
-    size_of_memory  = Column(Float, nullable=False, default=0)
-    files           = relationship("File", back_populates="user", cascade="all, delete-orphan")
+    id             = Column(Integer, primary_key=True, autoincrement=True)
+    login          = Column(String, unique=True, nullable=False, index=True)
+    password_hash  = Column(String, nullable=False)
+    created_at     = Column(DateTime, default=datetime.now)
+    storage_used   = Column(Float, nullable=False, default=0)
+    size_of_memory = Column(Float, nullable=False, default=0)  # 0 = загрузка заблокирована
+    files          = relationship("File", back_populates="user", cascade="all, delete-orphan")
 
 
 class File(Base):
@@ -75,13 +75,18 @@ def get_users_data():
 
 
 def insert_user_data(login: str, password_hash: str, size_of_memory: float = 0):
-    """password_hash must already be hashed by the caller."""
+    """
+    Создаёт пользователя.
+    size_of_memory — лимит хранилища в байтах.
+    0 = загрузка заблокирована (по умолчанию для новых пользователей).
+    """
     session = SessionLocal()
     try:
         session.add(User(
             login=login,
             password_hash=password_hash,
             created_at=datetime.now(),
+            storage_used=0,
             size_of_memory=size_of_memory,
         ))
         session.commit()
@@ -121,24 +126,22 @@ def update_user_storage(user_id: int, delta: float):
     finally:
         session.close()
 
+
 def update_user_by_login(login: str, **kwargs):
     """
-    Обновляет данные пользователя, находя его по логину.
-    Запрещенные для редактирования поля: id, storage_used, files.
+    Обновляет поля пользователя по логину.
+    Защищённые поля (нельзя менять): id, storage_used, files.
     """
+    protected = {"id", "storage_used", "files"}
     session = SessionLocal()
-    # Список полей, которые нельзя менять этой функцией
-    protected_fields = {"id", "storage_used", "files"}    
     try:
-        # Ищем пользователя по логину
-        user = session.query(User).filter_by(login=login).first()        
+        user = session.query(User).filter_by(login=login).first()
         if not user:
             print(f"User '{login}' not found")
-            return False        
-        # Обновляем только разрешенные поля, которые есть в модели
+            return False
         for key, value in kwargs.items():
-            if key not in protected_fields and hasattr(user, key):
-                setattr(user, key, value)        
+            if key not in protected and hasattr(user, key):
+                setattr(user, key, value)
         session.commit()
         return True
     except Exception as e:
@@ -147,6 +150,7 @@ def update_user_by_login(login: str, **kwargs):
         return False
     finally:
         session.close()
+
 
 # ─── File CRUD ────────────────────────────────────────────────────────────────
 
@@ -204,10 +208,18 @@ def delete_file_record(file_id: int, user_id: int) -> bool:
         session.close()
 
 
-# ─── CLI ─────────────────────────────────────────────────────────────────────
+# ─── CLI ──────────────────────────────────────────────────────────────────────
+
+def _fmt(b):
+    if b <= 0:          return "заблокировано"
+    if b >= 1024 ** 3:  return f"{b / 1024 ** 3:.2f} GB"
+    if b >= 1024 ** 2:  return f"{b / 1024 ** 2:.1f} MB"
+    if b >= 1024:       return f"{b / 1024:.1f} KB"
+    return f"{b} B"
+
 
 if __name__ == "__main__":
-    print("Commands: get_user | get_users | add_user | del_user | update_user | exit")
+    print("Commands: get_user | get_users | add_user | del_user | set_limit | exit")
     while True:
         command = input("> ").strip()
         if command == "exit":
@@ -216,43 +228,29 @@ if __name__ == "__main__":
             login = input("Login: ")
             u = get_user_data(login)
             if u:
-                print(f"[{u.id}] {u.login}  created={u.created_at}  used={u.storage_used}B")
+                print(f"[{u.id}] {u.login}  used={_fmt(u.storage_used)}  limit={_fmt(u.size_of_memory)}  created={u.created_at}")
             else:
                 print("Not found")
         elif command == "get_users":
             for u in get_users_data():
-                print(f"[{u.id}] {u.login}  created={u.created_at}  used={u.storage_used}B max_size={u.size_of_memory}")
+                print(f"[{u.id}] {u.login}  used={_fmt(u.storage_used)}  limit={_fmt(u.size_of_memory)}")
         elif command == "add_user":
             login    = input("Login: ")
             password = input("Password: ")
-            size_of_storage = input("Size of storage: ").strip()
-            if size_of_storage.isdigit():
-                #size_of_storage = size_of_storage*1024
-                print(size_of_storage)
-                insert_user_data(login, get_password_hash(password), int(size_of_storage))
-            else:                
-                insert_user_data(login, get_password_hash(password))
+            mem_inp  = input("Storage limit in bytes (0 = blocked): ").strip()
+            size     = float(mem_inp) if mem_inp.lstrip("-").isdigit() else 0
+            insert_user_data(login, get_password_hash(password), size)
             print("Done")
         elif command == "del_user":
             login = input("Login: ")
             delete_user_data(login)
-        elif command == "update_user":
-            login = input("Target Login: ")
-            new_login = input("New Login (skip with Enter): ").strip()
-            new_mem = input("New Memory Size (skip with Enter): ").strip()
-
-            updates = {}
-            if new_login: 
-                updates['login'] = new_login
-            if new_mem.isdigit(): 
-                updates['size_of_memory'] = float(new_mem)
-
-            if updates:
-                if update_user_by_login(login, **updates):
-                    print("Successfully updated")
-                else:
-                    print("Update failed")
+        elif command == "set_limit":
+            login   = input("Login: ")
+            mem_inp = input("New limit in bytes (0 = block, e.g. 1073741824 = 1GB): ").strip()
+            if mem_inp.lstrip("-").isdigit():
+                ok = update_user_by_login(login, size_of_memory=float(mem_inp))
+                print("Updated" if ok else "Failed")
             else:
-                print("No changes provided")
+                print("Invalid value")
         else:
             print("Unknown command")
