@@ -211,7 +211,7 @@ def delete_file_record(file_id: int, user_id: int) -> bool:
 # ─── CLI ──────────────────────────────────────────────────────────────────────
 
 def _fmt(b):
-    if b <= 0:          return "заблокировано"
+    if b <= 0:          return f"{b} B"
     if b >= 1024 ** 3:  return f"{b / 1024 ** 3:.2f} GB"
     if b >= 1024 ** 2:  return f"{b / 1024 ** 2:.1f} MB"
     if b >= 1024:       return f"{b / 1024:.1f} KB"
