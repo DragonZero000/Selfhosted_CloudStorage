@@ -46,6 +46,22 @@ def _ensure_bucket():
         print(f"Warning: could not ensure bucket: {e}")
 
 
+# ─── Helpers ────────────────────────────────────────────────────────────────
+
+def generate_presigned_url(s3_key, file_name, expires=3600):
+    """Generate a presigned URL for direct download"""
+    try:
+        url = s3_public.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': BUCKET, 'Key': s3_key},
+            ExpiresIn=expires
+        )
+        return url
+    except Exception as e:
+        print(f"Presigned URL error: {e}")
+        return None
+
+
 # ─── Endpoints ────────────────────────────────────────────────────────────────
 
 @router.get("", summary="List user files")
@@ -143,6 +159,19 @@ def download_file(
         },
     )
 
+@router.get("/share/{file_id}", summary="Get shareable presigned URL")
+def get_share_link(
+    file_id: int,
+    current_user: User = Depends(get_current_user),
+):
+    file = db.get_file(file_id, current_user.id)
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found")
+    url = generate_presigned_url(file.s3_key, file.file_name, expires=86400)  # 24 hours
+    if not url:
+        raise HTTPException(status_code=500, detail="Failed to generate share link")
+    return {"share_url": url, "file_name": file.file_name}
+
 
 @router.delete("/{file_id}", summary="Delete a file")
 def delete_file(
@@ -163,3 +192,24 @@ def delete_file(
         raise HTTPException(status_code=500, detail="Failed to remove file record")
 
     return {"msg": "File deleted successfully"}
+
+
+@router.patch("/{file_id}/rename", summary="Rename file")
+def rename_file(
+    file_id: int,
+    new_name: str,
+    current_user: User = Depends(get_current_user),
+):
+    if not new_name or not new_name.strip():
+        raise HTTPException(status_code=400, detail="New name cannot be empty")
+    
+    file = db.get_file(file_id, current_user.id)
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # Update in DB
+    success = db.rename_file(file_id, current_user.id, new_name.strip())
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to rename")
+    
+    return {"msg": "File renamed successfully", "new_name": new_name.strip()}
