@@ -55,6 +55,8 @@ function Main() {
   const [dragging,   setDragging]   = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [search,     setSearch]     = useState("");
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [renamingId, setRenamingId] = useState(null);
 
   // ── Auth guard ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -77,6 +79,13 @@ function Main() {
   }, []);
 
   useEffect(() => { fetchFiles(); }, [fetchFiles]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setOpenMenuId(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   // ── Upload ──────────────────────────────────────────────────────────────────
   const uploadFiles = async (fileList) => {
@@ -144,8 +153,43 @@ function Main() {
     }
   };
 
+  // ── Share ────────────────────────────────────────────────────────────────────
+  const shareFile = async (fileId) => {
+    try {
+      const res = await api.get(`/files/share/${fileId}`, { headers: authHeader() });
+      const { share_url } = res.data;
+      await navigator.clipboard.writeText(share_url);
+      alert(`Ссылка на скачивание скопирована!\nСрок действия: 24 часа`);
+    } catch (err) {
+      setError("Не удалось сгенерировать ссылку для поделиться");
+      console.error(err);
+    }
+  };
+
+  // ── Rename ───────────────────────────────────────────────────────────────────
+  const renameFile = async (fileId) => {
+    const newName = prompt("Новое имя файла:");
+    if (!newName || newName.trim() === "") return;
+
+    setRenamingId(fileId);
+    try {
+      await api.patch(`/files/${fileId}/rename?new_name=${encodeURIComponent(newName.trim())}`, {}, {
+        headers: authHeader(),
+      });
+      setFiles(prev => prev.map(f => f.id === fileId ? {...f, file_name: newName.trim()} : f));
+      alert("Файл переименован");
+    } catch {
+      setError("Ошибка переименования");
+    } finally {
+      setRenamingId(null);
+      setOpenMenuId(null);
+    }
+  };
+
   // ── Delete ───────────────────────────────────────────────────────────────────
   const deleteFile = async (fileId) => {
+    if (!confirm("Удалить файл?")) return;
+
     setDeletingId(fileId);
     try {
       await api.delete(`/files/${fileId}`, { headers: authHeader() });
@@ -154,6 +198,7 @@ function Main() {
       setError("Ошибка удаления файла");
     } finally {
       setDeletingId(null);
+      setOpenMenuId(null);
     }
   };
 
@@ -306,10 +351,10 @@ function Main() {
             <div className="overflow-hidden rounded-xl border border-gray-700">
               {/* Table header */}
               <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-gray-800 text-xs text-gray-500 font-medium uppercase tracking-wider border-b border-gray-700">
-                <span className="col-span-6">Имя файла</span>
+                <span className="col-span-5">Имя файла</span>
                 <span className="col-span-2 text-right">Размер</span>
                 <span className="col-span-2 hidden sm:block text-right">Дата</span>
-                <span className="col-span-2 text-right">Действия</span>
+                <span className="col-span-3 text-right">Действия</span>
               </div>
 
               {/* Rows */}
@@ -317,10 +362,10 @@ function Main() {
                 {filtered.map((file) => (
                   <div
                     key={file.id}
-                    className="grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-gray-800/50 transition-colors"
+                    className="grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-gray-800/50 transition-colors relative"
                   >
                     {/* Name */}
-                    <div className="col-span-6 flex items-center gap-2 min-w-0">
+                    <div className="col-span-5 flex items-center gap-2 min-w-0">
                       <span className="text-lg shrink-0">{fileIcon(file.file_name)}</span>
                       <span className="text-sm truncate" title={file.file_name}>
                         {file.file_name}
@@ -338,22 +383,57 @@ function Main() {
                     </div>
 
                     {/* Actions */}
-                    <div className="col-span-2 flex items-center justify-end gap-1">
+                    <div className="col-span-3 flex items-center justify-end gap-1">
+                      {/* Share */}
                       <button
-                        onClick={() => downloadFile(file.id, file.file_name)}
+                        onClick={(e) => { e.stopPropagation(); shareFile(file.id); }}
+                        title="Поделиться"
+                        className="p-2 rounded-lg hover:bg-green-600/20 hover:text-green-400 text-gray-400 transition-colors text-base flex items-center justify-center w-9 h-9"
+                      >
+                        🔗
+                      </button>
+
+                      {/* Download */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); downloadFile(file.id, file.file_name); }}
                         title="Скачать"
-                        className="p-1.5 rounded-lg hover:bg-blue-600/20 hover:text-blue-400 text-gray-500 transition-colors text-base"
+                        className="p-2 rounded-lg hover:bg-blue-600/20 hover:text-blue-400 text-gray-400 transition-colors text-base flex items-center justify-center w-9 h-9"
                       >
                         ⬇️
                       </button>
-                      <button
-                        onClick={() => deleteFile(file.id)}
-                        disabled={deletingId === file.id}
-                        title="Удалить"
-                        className="p-1.5 rounded-lg hover:bg-red-600/20 hover:text-red-400 text-gray-500 disabled:opacity-40 transition-colors text-base"
-                      >
-                        {deletingId === file.id ? "⏳" : "🗑️"}
-                      </button>
+
+                      {/* More options */}
+                      <div className="relative">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenMenuId(openMenuId === file.id ? null : file.id);
+                          }}
+                          title="Больше опций"
+                          className="p-2 rounded-lg hover:bg-gray-600/50 text-gray-400 hover:text-white transition-colors text-base flex items-center justify-center w-9 h-9"
+                        >
+                          ⋮
+                        </button>
+
+                        {openMenuId === file.id && (
+                          <div className="absolute right-0 mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1 text-sm">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); renameFile(file.id); }}
+                              disabled={renamingId === file.id}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2 text-gray-300 disabled:opacity-50"
+                            >
+                              ✏️ Переименовать
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); deleteFile(file.id); }}
+                              disabled={deletingId === file.id}
+                              className="w-full text-left px-4 py-2 hover:bg-red-900/50 flex items-center gap-2 text-red-400 disabled:opacity-50"
+                            >
+                              🗑️ Удалить
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
