@@ -161,14 +161,12 @@ def get_user_files(user_id: int):
     finally:
         session.close()
 
-
 def get_file(file_id: int, user_id: int):
     session = SessionLocal()
     try:
         return session.query(File).filter_by(id=file_id, user_id=user_id).first()
     finally:
         session.close()
-
 
 def insert_file(user_id: int, file_name: str, s3_key: str, file_size: float = 0):
     session = SessionLocal()
@@ -187,7 +185,6 @@ def insert_file(user_id: int, file_name: str, s3_key: str, file_size: float = 0)
     finally:
         session.close()
 
-
 def delete_file_record(file_id: int, user_id: int) -> bool:
     session = SessionLocal()
     try:
@@ -199,6 +196,22 @@ def delete_file_record(file_id: int, user_id: int) -> bool:
         user = session.query(User).filter_by(id=user_id).first()
         if user:
             user.storage_used = max(0, (user.storage_used or 0) - file_size)
+        session.commit()
+        return True
+    except Exception:
+        session.rollback()
+        return False
+    finally:
+        session.close()
+
+def rename_file(file_id: int, user_id: int, new_name: str) -> bool:
+    """Rename file in database"""
+    session = SessionLocal()
+    try:
+        f = session.query(File).filter_by(id=file_id, user_id=user_id).first()
+        if not f:
+            return False
+        f.file_name = new_name
         session.commit()
         return True
     except Exception:
