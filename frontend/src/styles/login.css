@@ -105,7 +105,7 @@
 /* ══════════════════════════════════════════════════════════════════════════
    Block: auth-spinner
    Индикатор загрузки внутри кнопки
-   ══════════════════════════════════════════════════════════════════════════ */
+   ══════════════════════════════════════════════════════════ */
 .auth-spinner {
   @apply flex items-center gap-2;
 }
@@ -117,3 +117,32 @@
 /* SVG-элементы внутри auth-spinner */
 .auth-spinner__arc  { @apply opacity-25; }
 .auth-spinner__path { @apply opacity-75; }
+
+/* Light theme styles - analogous to dark, without changing dark */
+html:not(.dark) .auth-tabs {
+  @apply border-gray-300;
+}
+
+html:not(.dark) .auth-tabs__item {
+  @apply bg-white text-gray-600 hover:bg-gray-100 border-gray-200;
+}
+
+html:not(.dark) .auth-form {
+  @apply bg-white border-gray-200;
+}
+
+html:not(.dark) .auth-form__label {
+  @apply text-gray-600;
+}
+
+html:not(.dark) .auth-form__input {
+  @apply bg-white border-gray-300 text-gray-900;
+}
+
+html:not(.dark) .auth-form__alert--error {
+  @apply bg-red-50 border-red-200 text-red-700;
+}
+
+html:not(.dark) .auth-form__alert--success {
+  @apply bg-green-50 border-green-200 text-green-700;
+}
