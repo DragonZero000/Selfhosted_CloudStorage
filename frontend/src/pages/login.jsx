@@ -2,6 +2,10 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../styles/login.css";
+import { useTranslation } from 'react-i18next';
+
+function Login() {
+  const { t, i18n } = useTranslation();
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://127.0.0.1:8000",

@@ -254,7 +254,7 @@ function Main() {
 
         {/* Element: правая группа */}
         <div className="app-header__controls">
-
+          
           {/* Block: storage-bar */}
           {limitBytes > 0 && (
             <div className="storage-bar">
