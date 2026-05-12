@@ -1,0 +1,118 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Block: auth-page
+   Корневой контейнер карточки авторизации
+   ══════════════════════════════════════════════════════════════════════════ */
+.auth-page {
+  @apply w-full max-w-sm px-4;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Block: auth-logo
+   Логотип над формой
+   ══════════════════════════════════════════════════════════════════════════ */
+.auth-logo {
+  @apply text-center mb-6;
+}
+
+.auth-logo__icon {
+  @apply text-4xl block;
+}
+
+.auth-logo__title {
+  @apply text-2xl font-bold mt-1 tracking-wide;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Block: auth-tabs
+   Переключатель вкладок «Вход / Регистрация»
+   ══════════════════════════════════════════════════════════════════════════ */
+.auth-tabs {
+  @apply flex rounded-xl overflow-hidden mb-4 border border-gray-700;
+}
+
+.auth-tabs__item {
+  @apply flex-1 py-2 text-sm font-medium transition-colors
+         bg-gray-800 text-gray-400 hover:bg-gray-700;
+}
+
+/* Modifier: активная вкладка */
+.auth-tabs__item--active {
+  @apply bg-blue-600 text-white hover:bg-blue-600;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Block: auth-form
+   Форма входа / регистрации
+   ══════════════════════════════════════════════════════════════════════════ */
+.auth-form {
+  @apply flex flex-col gap-3 p-4 bg-gray-800 rounded-xl border border-gray-700;
+}
+
+/* Element: обёртка поля */
+.auth-form__field {
+  @apply flex flex-col gap-1;
+}
+
+/* Element: подпись поля */
+.auth-form__label {
+  @apply text-sm text-gray-400;
+}
+
+/* Element: текстовый / парольный инпут */
+.auth-form__input {
+  @apply bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm outline-none;
+}
+
+.auth-form__input:focus {
+  @apply border-blue-500;
+}
+
+.auth-form__input:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Element: сообщение (ошибка / успех) */
+.auth-form__alert {
+  @apply text-sm rounded-lg px-3 py-2 text-center border;
+}
+
+/* Modifier: ошибка */
+.auth-form__alert--error {
+  @apply bg-red-900/50 border-red-700 text-red-200;
+}
+
+/* Modifier: успех */
+.auth-form__alert--success {
+  @apply bg-green-900/50 border-green-700 text-green-200;
+}
+
+/* Element: кнопка отправки */
+.auth-form__submit {
+  @apply w-full flex items-center justify-center gap-2
+         bg-blue-600 text-white font-medium rounded-lg py-2
+         transition-colors mt-1;
+}
+
+.auth-form__submit:hover:not(:disabled) {
+  @apply bg-blue-500;
+}
+
+.auth-form__submit:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Block: auth-spinner
+   Индикатор загрузки внутри кнопки
+   ══════════════════════════════════════════════════════════════════════════ */
+.auth-spinner {
+  @apply flex items-center gap-2;
+}
+
+.auth-spinner__icon {
+  @apply h-4 w-4 animate-spin;
+}
+
+/* SVG-элементы внутри auth-spinner */
+.auth-spinner__arc  { @apply opacity-25; }
+.auth-spinner__path { @apply opacity-75; }

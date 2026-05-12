@@ -1,8 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import "../styles/main.css";
 
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || "http://127.0.0.1:8000", timeout: 30000 });
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || "http://127.0.0.1:8000",
+  timeout: 30000,
+});
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -43,14 +47,14 @@ function fileIcon(name) {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 function Main() {
-  const navigate   = useNavigate();
-  const fileInput  = useRef(null);
-  const dropRef    = useRef(null);
+  const navigate  = useNavigate();
+  const fileInput = useRef(null);
+  const dropRef   = useRef(null);
 
   const [files,      setFiles]      = useState([]);
   const [user,       setUser]       = useState(null);
   const [uploading,  setUploading]  = useState(false);
-  const [uploadProg, setUploadProg] = useState(null);  // { name, pct }
+  const [uploadProg, setUploadProg] = useState(null); // { name, pct }
   const [error,      setError]      = useState("");
   const [dragging,   setDragging]   = useState(false);
   const [deletingId, setDeletingId] = useState(null);
@@ -83,8 +87,8 @@ function Main() {
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = () => setOpenMenuId(null);
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
   // ── Upload ──────────────────────────────────────────────────────────────────
@@ -96,15 +100,11 @@ function Main() {
     for (const file of Array.from(fileList)) {
       try {
         setUploadProg({ name: file.name, pct: 0 });
-
         const formData = new FormData();
         formData.append("file", file);
 
         await api.post("/files/upload", formData, {
-          headers: {
-            ...authHeader(),
-            "Content-Type": "multipart/form-data",
-          },
+          headers: { ...authHeader(), "Content-Type": "multipart/form-data" },
           onUploadProgress: (e) => {
             const pct = Math.round((e.loaded / e.total) * 100);
             setUploadProg({ name: file.name, pct });
@@ -173,10 +173,14 @@ function Main() {
 
     setRenamingId(fileId);
     try {
-      await api.patch(`/files/${fileId}/rename?new_name=${encodeURIComponent(newName.trim())}`, {}, {
-        headers: authHeader(),
-      });
-      setFiles(prev => prev.map(f => f.id === fileId ? {...f, file_name: newName.trim()} : f));
+      await api.patch(
+        `/files/${fileId}/rename?new_name=${encodeURIComponent(newName.trim())}`,
+        {},
+        { headers: authHeader() }
+      );
+      setFiles((prev) =>
+        prev.map((f) => (f.id === fileId ? { ...f, file_name: newName.trim() } : f))
+      );
       alert("Файл переименован");
     } catch {
       setError("Ошибка переименования");
@@ -209,7 +213,7 @@ function Main() {
   };
 
   // ── Drag & drop ──────────────────────────────────────────────────────────────
-  const onDragOver  = (e) => { e.preventDefault(); setDragging(true);  };
+  const onDragOver  = (e) => { e.preventDefault(); setDragging(true); };
   const onDragLeave = ()  => setDragging(false);
   const onDrop      = (e) => {
     e.preventDefault();
@@ -217,217 +221,226 @@ function Main() {
     uploadFiles(e.dataTransfer.files);
   };
 
-  // ── Filtered files ────────────────────────────────────────────────────────────
-  const filtered = files.filter((f) =>
+  // ── Derived state ─────────────────────────────────────────────────────────────
+  const filtered   = files.filter((f) =>
     f.file_name.toLowerCase().includes(search.toLowerCase())
   );
-
-  // ── Storage bar ───────────────────────────────────────────────────────────────
-  const usedBytes = files.reduce((acc, file) => acc + (file.file_size || 0), 0);
+  const usedBytes  = files.reduce((acc, f) => acc + (f.file_size || 0), 0);
   const limitBytes = user?.size_of_memory || 0;
   const usedPct    = limitBytes > 0 ? Math.min(100, (usedBytes / limitBytes) * 100) : 0;
 
-  // ────────────────────────────────────────────────────────────────────────────
+  const storageFillMod =
+    usedPct > 90 ? " storage-bar__fill--danger" :
+    usedPct > 70 ? " storage-bar__fill--warning" : "";
+
+  const uploadZoneMod =
+    (dragging  ? " upload-zone--dragging"  : "") +
+    (uploading ? " upload-zone--disabled"  : "");
+
+  // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-gray-900 text-gray-100">
+    /* Block: app */
+    <div className="app">
 
-      {/* ── Header ── */}
-      <header className="flex items-center justify-between px-6 py-3 bg-gray-800 border-b border-gray-700 shadow-md">
-        <div className="flex items-center gap-2 text-xl font-bold">
+      {/* ── Block: app-header ── */}
+      <header className="app-header">
+
+        {/* Element: логотип */}
+        <div className="app-header__logo">
           <span>☁️</span>
           <span>CloudStorage</span>
         </div>
 
-        <div className="flex items-center gap-4">
-          {/* Storage bar */}
+        {/* Element: правая группа */}
+        <div className="app-header__controls">
+
+          {/* Block: storage-bar */}
           {limitBytes > 0 && (
-            <div className="hidden sm:flex items-center gap-2 text-xs text-gray-400">
-              <span>{formatSize(usedBytes)} / {formatSize(limitBytes)}</span>
-              <div className="w-24 h-2 bg-gray-700 rounded-full overflow-hidden">
+            <div className="storage-bar">
+              <span className="storage-bar__label">
+                {formatSize(usedBytes)} / {formatSize(limitBytes)}
+              </span>
+              <div className="storage-bar__track">
                 <div
-                  className={`h-full rounded-full transition-all ${usedPct > 90 ? "bg-red-500" : usedPct > 70 ? "bg-yellow-500" : "bg-blue-500"}`}
+                  className={`storage-bar__fill${storageFillMod}`}
                   style={{ width: `${usedPct}%` }}
                 />
               </div>
             </div>
           )}
 
+          {/* Element: имя пользователя */}
           {user && (
-            <span className="text-sm text-gray-400 hidden sm:block">
-              {user.login}
-            </span>
+            <span className="app-header__username">{user.login}</span>
           )}
 
-          <button
-            onClick={logout}
-            className="text-sm text-gray-400 hover:text-white border border-gray-600 hover:border-gray-400 rounded-lg px-3 py-1 transition-colors"
-          >
+          {/* Element: выход */}
+          <button onClick={logout} className="app-header__logout-btn">
             Выйти
           </button>
         </div>
       </header>
 
-      {/* ── Main area ── */}
-      <main className="flex-1 flex flex-col max-w-5xl w-full mx-auto px-4 py-6 gap-4">
+      {/* ── Block: app-content ── */}
+      <main className="app-content">
 
-        {/* Error banner */}
+        {/* Block: error-banner */}
         {error && (
-          <div className="flex items-center justify-between bg-red-900/50 border border-red-700 text-red-200 text-sm rounded-lg px-4 py-2">
-            <span>{error}</span>
-            <button onClick={() => setError("")} className="ml-4 text-red-400 hover:text-white">✕</button>
+          <div className="error-banner">
+            <span className="error-banner__message">{error}</span>
+            <button onClick={() => setError("")} className="error-banner__close">✕</button>
           </div>
         )}
 
-        {/* ── Upload zone ── */}
+        {/* Block: upload-zone */}
         <div
           ref={dropRef}
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
           onDrop={onDrop}
           onClick={() => !uploading && fileInput.current.click()}
-          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors select-none ${
-            dragging
-              ? "border-blue-400 bg-blue-900/20"
-              : "border-gray-600 hover:border-gray-500 hover:bg-gray-800/50"
-          } ${uploading ? "pointer-events-none opacity-50" : ""}`}
+          className={`upload-zone${uploadZoneMod}`}
         >
           <input
             ref={fileInput}
             type="file"
             multiple
-            className="hidden"
+            className="upload-zone__input"
             onChange={(e) => uploadFiles(e.target.files)}
           />
 
           {uploadProg ? (
-            <div className="flex flex-col items-center gap-2">
-              <p className="text-sm text-gray-300">Загрузка: {uploadProg.name}</p>
-              <div className="w-64 h-2 bg-gray-700 rounded-full overflow-hidden">
+            /* Element: прогресс загрузки */
+            <div className="upload-zone__progress">
+              <p className="upload-zone__progress-name">Загрузка: {uploadProg.name}</p>
+              <div className="upload-zone__progress-bar">
                 <div
-                  className="h-full bg-blue-500 rounded-full transition-all"
+                  className="upload-zone__progress-fill"
                   style={{ width: `${uploadProg.pct}%` }}
                 />
               </div>
-              <p className="text-xs text-gray-500">{uploadProg.pct}%</p>
+              <p className="upload-zone__progress-pct">{uploadProg.pct}%</p>
             </div>
           ) : (
+            /* Состояние ожидания */
             <>
-              <div className="text-4xl mb-2">⬆️</div>
-              <p className="text-gray-300 font-medium">Перетащите файлы сюда</p>
-              <p className="text-sm text-gray-500 mt-1">или нажмите для выбора</p>
+              <div className="upload-zone__icon">⬆️</div>
+              <p className="upload-zone__prompt">Перетащите файлы сюда</p>
+              <p className="upload-zone__hint">или нажмите для выбора</p>
             </>
           )}
         </div>
 
-        {/* ── Toolbar ── */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">🔍</span>
+        {/* Block: file-toolbar */}
+        <div className="file-toolbar">
+          <div className="file-toolbar__search">
+            <span className="file-toolbar__search-icon">🔍</span>
             <input
               type="text"
               placeholder="Поиск файлов..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+              className="file-toolbar__search-input"
             />
           </div>
           <button
             onClick={fetchFiles}
-            className="text-sm border border-gray-700 hover:border-gray-500 rounded-lg px-3 py-2 text-gray-400 hover:text-white transition-colors"
+            className="file-toolbar__refresh-btn"
             title="Обновить"
           >
             🔄
           </button>
         </div>
 
-        {/* ── File list ── */}
-        <div className="flex-1">
+        {/* Block: file-list */}
+        <div className="file-list">
           {filtered.length === 0 ? (
-            <div className="text-center py-16 text-gray-500">
+            <div className="file-list__empty">
               {search ? "Файлы не найдены" : "Нет загруженных файлов"}
             </div>
           ) : (
-            <div className="overflow-hidden rounded-xl border border-gray-700">
-              {/* Table header */}
-              <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-gray-800 text-xs text-gray-500 font-medium uppercase tracking-wider border-b border-gray-700">
-                <span className="col-span-5">Имя файла</span>
-                <span className="col-span-2 text-right">Размер</span>
-                <span className="col-span-2 hidden sm:block text-right">Дата</span>
-                <span className="col-span-3 text-right">Действия</span>
+            <div className="file-list__table">
+
+              {/* Element: шапка таблицы */}
+              <div className="file-list__header">
+                <span className="file-list__header-cell file-list__header-cell--name">Имя файла</span>
+                <span className="file-list__header-cell file-list__header-cell--size">Размер</span>
+                <span className="file-list__header-cell file-list__header-cell--date">Дата</span>
+                <span className="file-list__header-cell file-list__header-cell--actions">Действия</span>
               </div>
 
-              {/* Rows */}
-              <div className="divide-y divide-gray-700/50">
+              {/* Element: строки */}
+              <div className="file-list__rows">
                 {filtered.map((file) => (
-                  <div
-                    key={file.id}
-                    className="grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-gray-800/50 transition-colors relative"
-                  >
-                    {/* Name */}
-                    <div className="col-span-5 flex items-center gap-2 min-w-0">
-                      <span className="text-lg shrink-0">{fileIcon(file.file_name)}</span>
-                      <span className="text-sm truncate" title={file.file_name}>
+                  <div key={file.id} className="file-list__row">
+
+                    {/* Block: file-item — ячейка имени */}
+                    <div className="file-item__name-cell">
+                      <span className="file-item__icon">{fileIcon(file.file_name)}</span>
+                      <span className="file-item__name" title={file.file_name}>
                         {file.file_name}
                       </span>
                     </div>
 
-                    {/* Size */}
-                    <div className="col-span-2 text-right text-sm text-gray-400">
+                    {/* file-item — ячейка размера */}
+                    <div className="file-item__size-cell">
                       {formatSize(file.file_size)}
                     </div>
 
-                    {/* Date */}
-                    <div className="col-span-2 hidden sm:block text-right text-xs text-gray-500">
+                    {/* file-item — ячейка даты */}
+                    <div className="file-item__date-cell">
                       {formatDate(file.uploaded_at)}
                     </div>
 
-                    {/* Actions */}
-                    <div className="col-span-3 flex items-center justify-end gap-1">
-                      {/* Share */}
+                    {/* file-item — ячейка действий */}
+                    <div className="file-item__actions-cell">
+
+                      {/* Поделиться */}
                       <button
                         onClick={(e) => { e.stopPropagation(); shareFile(file.id); }}
                         title="Поделиться"
-                        className="p-2 rounded-lg hover:bg-green-600/20 hover:text-green-400 text-gray-400 transition-colors text-base flex items-center justify-center w-9 h-9"
+                        className="file-actions__btn file-actions__btn--share"
                       >
                         🔗
                       </button>
 
-                      {/* Download */}
+                      {/* Скачать */}
                       <button
                         onClick={(e) => { e.stopPropagation(); downloadFile(file.id, file.file_name); }}
                         title="Скачать"
-                        className="p-2 rounded-lg hover:bg-blue-600/20 hover:text-blue-400 text-gray-400 transition-colors text-base flex items-center justify-center w-9 h-9"
+                        className="file-actions__btn file-actions__btn--download"
                       >
                         ⬇️
                       </button>
 
-                      {/* More options */}
-                      <div className="relative">
+                      {/* Block: file-actions — выпадающее меню */}
+                      <div className="file-actions">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setOpenMenuId(openMenuId === file.id ? null : file.id);
                           }}
                           title="Больше опций"
-                          className="p-2 rounded-lg hover:bg-gray-600/50 text-gray-400 hover:text-white transition-colors text-base flex items-center justify-center w-9 h-9"
+                          className="file-actions__btn file-actions__btn--more"
                         >
                           ⋮
                         </button>
 
                         {openMenuId === file.id && (
-                          <div className="absolute right-0 mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1 text-sm">
+                          /* Block: context-menu */
+                          <div className="context-menu">
                             <button
                               onClick={(e) => { e.stopPropagation(); renameFile(file.id); }}
                               disabled={renamingId === file.id}
-                              className="w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2 text-gray-300 disabled:opacity-50"
+                              className="context-menu__item"
                             >
                               ✏️ Переименовать
                             </button>
                             <button
                               onClick={(e) => { e.stopPropagation(); deleteFile(file.id); }}
                               disabled={deletingId === file.id}
-                              className="w-full text-left px-4 py-2 hover:bg-red-900/50 flex items-center gap-2 text-red-400 disabled:opacity-50"
+                              className="context-menu__item context-menu__item--danger"
                             >
                               🗑️ Удалить
                             </button>
@@ -441,8 +454,9 @@ function Main() {
             </div>
           )}
 
+          {/* Element: счётчик файлов */}
           {filtered.length > 0 && (
-            <p className="text-xs text-gray-600 text-right mt-2">
+            <p className="file-list__count">
               {filtered.length} файл{filtered.length === 1 ? "" : filtered.length < 5 ? "а" : "ов"}
               {search ? ` из ${files.length}` : ""}
             </p>
