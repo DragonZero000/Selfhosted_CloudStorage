@@ -59,6 +59,7 @@ function Main() {
   const [search,     setSearch]     = useState("");
   const [openMenuId, setOpenMenuId] = useState(null);
   const [renamingId, setRenamingId] = useState(null);
+  const [shareModal, setShareModal] = useState({ open: false, url: "", fileName: "" });
 
   // Auth guard
   useEffect(() => {
@@ -148,14 +149,19 @@ function Main() {
     }
   };
 
-  const shareFile = async (fileId) => {
+  const shareFile = async (fileId, fileName) => {
     try {
       const res = await api.get(`/files/share/${fileId}`, { headers: authHeader() });
       const { share_url } = res.data;
-      await navigator.clipboard.writeText(share_url);
-      alert(t('shareLinkCopied'));
-    } catch {
+
+      setShareModal({
+        open: true,
+        url: share_url,
+        fileName: fileName || "file"
+      });
+    } catch (err) {
       setError("Не удалось сгенерировать ссылку");
+      console.error(err);
     }
   };
 
@@ -343,7 +349,7 @@ function Main() {
                     </div>
 
                     <div className="file-item__actions-cell">
-                      <button onClick={(e) => { e.stopPropagation(); shareFile(file.id); }} title={t('share')} className="file-actions__btn file-actions__btn--share">🔗</button>
+                      <button onClick={(e) => { e.stopPropagation(); shareFile(file.id, file.file_name); }}title={t('share')}className="file-actions__btn file-actions__btn--share">🔗</button>
                       <button onClick={(e) => { e.stopPropagation(); downloadFile(file.id, file.file_name); }} title={t('download')} className="file-actions__btn file-actions__btn--download">⬇️</button>
 
                       <div className="file-actions">
@@ -370,6 +376,44 @@ function Main() {
           )}
         </div>
       </main>
+            {/* Share Modal */}
+      {shareModal.open && (
+        <div className="share-modal-overlay" onClick={() => setShareModal({ open: false, url: "", fileName: "" })}>
+          <div 
+            className="share-modal" 
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="share-modal__content">
+              <h3 className="share-modal__title">Поделиться файлом</h3>
+              <p className="share-modal__filename">
+                {shareModal.fileName}
+              </p>
+
+              <div className="share-modal__link-box">
+                {shareModal.url}
+              </div>
+
+              <div className="share-modal__buttons">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(shareModal.url);
+                    alert("✅ Ссылка скопирована в буфер обмена!");
+                  }}
+                  className="share-modal__btn share-modal__btn--copy"
+                >
+                  📋 Скопировать ссылку
+                </button>
+                <button
+                  onClick={() => setShareModal({ open: false, url: "", fileName: "" })}
+                  className="share-modal__btn share-modal__btn--close"
+                >
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
