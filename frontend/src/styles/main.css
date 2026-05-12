@@ -216,7 +216,7 @@
 
 /* Element: таблица (обёртка с бордером) */
 .file-list__table {
-  @apply overflow-hidden rounded-xl border border-gray-700;
+  @apply overflow-y-visible rounded-xl border border-gray-700;
 }
 
 /* Element: шапка таблицы */
@@ -311,14 +311,15 @@
    ══════════════════════════════════════════════════════════════════════════ */
 .context-menu {
   @apply absolute right-0 mt-1 w-48
-         bg-gray-800 border border-gray-700
-         rounded-lg shadow-xl z-50 py-1 text-sm;
+         bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+         rounded-xl shadow-2xl z-[60] py-1 text-sm overflow-visible;
 }
 
 /* Element: пункт меню */
 .context-menu__item {
-  @apply w-full text-left px-4 py-2
-         flex items-center gap-2 text-gray-300 transition-colors;
+  @apply w-full text-left px-4 py-2.5
+         flex items-center gap-2 text-gray-700 dark:text-gray-300 
+         hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors;
 }
 
 .context-menu__item:hover:not(:disabled) {
@@ -331,11 +332,11 @@
 
 /* Modifier: опасное действие (удаление) */
 .context-menu__item--danger {
-  @apply text-red-400;
+  @apply text-red-600 dark:text-red-400;
 }
 
 .context-menu__item--danger:hover:not(:disabled) {
-  @apply bg-red-900/50;
+  @apply bg-red-50 dark:bg-red-900/50;
 }
 
 /* Light theme - analogous to dark theme, dark styles untouched */
@@ -469,4 +470,114 @@ html:not(.dark) .error-banner__close {
 
 html:not(.dark) .error-banner__close:hover {
   @apply text-red-700;
+}
+
+/* ====================== SHARE MODAL ====================== */
+.share-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1rem;
+}
+
+.share-modal {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.4);
+  width: 100%;
+  max-width: 480px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.dark .share-modal {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.6);
+}
+
+.share-modal__content {
+  padding: 1.75rem;
+}
+
+.share-modal__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: #111827;
+}
+
+.dark .share-modal__title {
+  color: #f3f4f6;
+}
+
+.share-modal__filename {
+  color: #6b7280;
+  margin-bottom: 1.25rem;
+  word-break: break-all;
+}
+
+.dark .share-modal__filename {
+  color: #9ca3af;
+}
+
+.share-modal__link-box {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.875rem;
+  word-break: break-all;
+  margin-bottom: 1.5rem;
+  color: #374151;
+}
+
+.dark .share-modal__link-box {
+  background: #111827;
+  border-color: #374151;
+  color: #e5e7eb;
+}
+
+.share-modal__buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.share-modal__btn {
+  flex: 1;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-weight: 500;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.share-modal__btn--copy {
+  background: #2563eb;
+  color: white;
+  border: none;
+}
+
+.share-modal__btn--copy:hover {
+  background: #1d4ed8;
+}
+
+.share-modal__btn--close {
+  background: transparent;
+  border: 1px solid #d1d5db;
+  color: #374151;
+}
+
+.dark .share-modal__btn--close {
+  border-color: #4b5563;
+  color: #d1d5db;
+}
+
+.dark .share-modal__btn--close:hover {
+  background: #374151;
 }
