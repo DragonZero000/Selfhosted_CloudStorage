@@ -5,26 +5,25 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 const resources = {
   en: {
     translation: {
-      'CloudStorage': 'CloudStorage',
-      'Login': 'Login',
-      'Register': 'Register',
-      'Username': 'Username',
-      'Password': 'Password',
+      Login: 'Login',
+      Register: 'Register',
+      Username: 'Username',
+      Password: 'Password',
       'Confirm Password': 'Confirm Password',
-      'Enter': 'Enter',
-      'Create account': 'Create account'
+      Enter: 'Enter',
+      'Create account': 'Create account',
+      // добавляй сюда все ключи по мере необходимости
     }
   },
   ru: {
     translation: {
-      'CloudStorage': 'CloudStorage',
-      'Login': 'Вход',
-      'Register': 'Регистрация',
-      'Username': 'Логин',
-      'Password': 'Пароль',
+      Login: 'Вход',
+      Register: 'Регистрация',
+      Username: 'Логин',
+      Password: 'Пароль',
       'Confirm Password': 'Подтверждение пароля',
-      'Enter': 'Войти',
-      'Create account': 'Создать аккаунт'
+      Enter: 'Войти',
+      'Create account': 'Создать аккаунт',
     }
   }
 };
@@ -35,13 +34,21 @@ i18n
   .init({
     resources,
     fallbackLng: 'en',
+    supportedLngs: ['en', 'ru'],
+
     detection: {
-      order: ['navigator', 'htmlTag', 'localStorage'],
+      order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
+      lookupLocalStorage: 'i18nextLng',
     },
+
     interpolation: {
       escapeValue: false,
     },
+
+    react: {
+      useSuspense: false,   // ← важно для стабильности
+    }
   });
 
 export default i18n;
