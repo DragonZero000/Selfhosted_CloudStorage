@@ -337,3 +337,136 @@
 .context-menu__item--danger:hover:not(:disabled) {
   @apply bg-red-900/50;
 }
+
+/* Light theme - analogous to dark theme, dark styles untouched */
+html:not(.dark) .app {
+  @apply bg-slate-50 text-slate-900;
+}
+
+html:not(.dark) .app-header {
+  @apply bg-white border-gray-200 shadow-sm;
+}
+
+html:not(.dark) .app-header__username {
+  @apply text-gray-600;
+}
+
+html:not(.dark) .app-header__logout-btn {
+  @apply text-gray-600 border-gray-300;
+}
+
+html:not(.dark) .app-header__logout-btn:hover {
+  @apply text-gray-900 border-gray-400;
+}
+
+html:not(.dark) .storage-bar {
+  @apply text-gray-500;
+}
+
+html:not(.dark) .storage-bar__track {
+  @apply bg-gray-200;
+}
+
+html:not(.dark) .upload-zone {
+  @apply border-gray-300;
+}
+
+html:not(.dark) .upload-zone:hover {
+  @apply border-gray-400 bg-slate-50;
+}
+
+html:not(.dark) .upload-zone--dragging {
+  @apply border-blue-400 bg-blue-50;
+}
+
+html:not(.dark) .upload-zone__progress-name {
+  @apply text-gray-700;
+}
+
+html:not(.dark) .upload-zone__progress-bar {
+  @apply bg-gray-200;
+}
+
+html:not(.dark) .upload-zone__prompt {
+  @apply text-gray-700;
+}
+
+html:not(.dark) .upload-zone__hint {
+  @apply text-gray-500;
+}
+
+html:not(.dark) .file-toolbar__search-input {
+  @apply bg-white border-gray-300 text-gray-900;
+}
+
+html:not(.dark) .file-toolbar__search-icon {
+  @apply text-gray-400;
+}
+
+html:not(.dark) .file-toolbar__refresh-btn {
+  @apply border-gray-300 text-gray-600;
+}
+
+html:not(.dark) .file-toolbar__refresh-btn:hover {
+  @apply border-gray-400 text-gray-900;
+}
+
+html:not(.dark) .file-list__empty {
+  @apply text-gray-500;
+}
+
+html:not(.dark) .file-list__table {
+  @apply border-gray-200;
+}
+
+html:not(.dark) .file-list__header {
+  @apply bg-gray-100 text-gray-600 border-gray-200;
+}
+
+html:not(.dark) .file-list__rows {
+  @apply divide-gray-200;
+}
+
+html:not(.dark) .file-list__row:hover {
+  @apply bg-gray-50;
+}
+
+html:not(.dark) .file-list__count {
+  @apply text-gray-500;
+}
+
+html:not(.dark) .file-item__size-cell {
+  @apply text-gray-600;
+}
+
+html:not(.dark) .file-item__date-cell {
+  @apply text-gray-500;
+}
+
+html:not(.dark) .file-actions__btn {
+  @apply text-gray-500;
+}
+
+html:not(.dark) .context-menu {
+  @apply bg-white border-gray-200;
+}
+
+html:not(.dark) .context-menu__item {
+  @apply text-gray-700;
+}
+
+html:not(.dark) .context-menu__item:hover:not(:disabled) {
+  @apply bg-gray-100;
+}
+
+html:not(.dark) .error-banner {
+  @apply bg-red-50 border-red-200 text-red-700;
+}
+
+html:not(.dark) .error-banner__close {
+  @apply text-red-500;
+}
+
+html:not(.dark) .error-banner__close:hover {
+  @apply text-red-700;
+}
