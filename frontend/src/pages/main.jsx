@@ -1,14 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import "../styles/main.css";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://127.0.0.1:8000",
   timeout: 30000,
 });
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function authHeader() {
   return { Authorization: `Bearer ${sessionStorage.getItem("access_token")}` };
@@ -44,9 +43,8 @@ function fileIcon(name) {
   return map[ext] || "📁";
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 function Main() {
+  const { t } = useTranslation();
   const navigate  = useNavigate();
   const fileInput = useRef(null);
   const dropRef   = useRef(null);
@@ -54,7 +52,7 @@ function Main() {
   const [files,      setFiles]      = useState([]);
   const [user,       setUser]       = useState(null);
   const [uploading,  setUploading]  = useState(false);
-  const [uploadProg, setUploadProg] = useState(null); // { name, pct }
+  const [uploadProg, setUploadProg] = useState(null);
   const [error,      setError]      = useState("");
   const [dragging,   setDragging]   = useState(false);
   const [deletingId, setDeletingId] = useState(null);
@@ -62,7 +60,7 @@ function Main() {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [renamingId, setRenamingId] = useState(null);
 
-  // ── Auth guard ──────────────────────────────────────────────────────────────
+  // Auth guard
   useEffect(() => {
     const token = sessionStorage.getItem("access_token");
     if (!token) { navigate("/", { replace: true }); return; }
@@ -72,15 +70,14 @@ function Main() {
       .catch(() => { sessionStorage.clear(); navigate("/", { replace: true }); });
   }, [navigate]);
 
-  // ── Fetch files ─────────────────────────────────────────────────────────────
   const fetchFiles = useCallback(async () => {
     try {
       const res = await api.get("/files", { headers: authHeader() });
       setFiles(res.data);
     } catch {
-      setError("Не удалось загрузить список файлов");
+      setError(t('unknownError'));
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { fetchFiles(); }, [fetchFiles]);
 
@@ -91,7 +88,7 @@ function Main() {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
-  // ── Upload ──────────────────────────────────────────────────────────────────
+  // Upload
   const uploadFiles = async (fileList) => {
     if (!fileList?.length) return;
     setUploading(true);
@@ -115,18 +112,17 @@ function Main() {
           const s = err.response?.status;
           const d = err.response?.data?.detail;
           if (s === 403 && d?.error === "storage_blocked") {
-            setError("Загрузка заблокирована. Обратитесь к администратору.");
+            setError(t('uploadBlocked'));
           } else if (s === 413 && d?.error === "storage_limit_exceeded") {
             const free = formatSize(d.free);
             const need = formatSize(d.file_size);
-            setError(`Недостаточно места: нужно ${need}, свободно ${free}`);
+            setError(t('storageLimitExceeded', { need, free }));
           } else {
             setError(`Ошибка загрузки: ${file.name}`);
           }
         } else {
           setError(`Ошибка загрузки: ${file.name}`);
         }
-        console.error(err);
       }
     }
 
@@ -135,7 +131,6 @@ function Main() {
     fetchFiles();
   };
 
-  // ── Download ─────────────────────────────────────────────────────────────────
   const downloadFile = async (fileId, fileName) => {
     try {
       const res = await api.get(`/files/download/${fileId}`, {
@@ -153,22 +148,19 @@ function Main() {
     }
   };
 
-  // ── Share ────────────────────────────────────────────────────────────────────
   const shareFile = async (fileId) => {
     try {
       const res = await api.get(`/files/share/${fileId}`, { headers: authHeader() });
       const { share_url } = res.data;
       await navigator.clipboard.writeText(share_url);
-      alert(`Ссылка на скачивание скопирована!\nСрок действия: 24 часа`);
-    } catch (err) {
-      setError("Не удалось сгенерировать ссылку для поделиться");
-      console.error(err);
+      alert(t('shareLinkCopied'));
+    } catch {
+      setError("Не удалось сгенерировать ссылку");
     }
   };
 
-  // ── Rename ───────────────────────────────────────────────────────────────────
   const renameFile = async (fileId) => {
-    const newName = prompt("Новое имя файла:");
+    const newName = prompt(t('newFileName'));
     if (!newName || newName.trim() === "") return;
 
     setRenamingId(fileId);
@@ -181,7 +173,7 @@ function Main() {
       setFiles((prev) =>
         prev.map((f) => (f.id === fileId ? { ...f, file_name: newName.trim() } : f))
       );
-      alert("Файл переименован");
+      alert(t('fileRenamed'));
     } catch {
       setError("Ошибка переименования");
     } finally {
@@ -190,14 +182,14 @@ function Main() {
     }
   };
 
-  // ── Delete ───────────────────────────────────────────────────────────────────
   const deleteFile = async (fileId) => {
-    if (!confirm("Удалить файл?")) return;
+    if (!confirm(t('confirmDelete'))) return;
 
     setDeletingId(fileId);
     try {
       await api.delete(`/files/${fileId}`, { headers: authHeader() });
       setFiles((prev) => prev.filter((f) => f.id !== fileId));
+      alert(t('fileDeleted'));
     } catch {
       setError("Ошибка удаления файла");
     } finally {
@@ -206,86 +198,58 @@ function Main() {
     }
   };
 
-  // ── Logout ───────────────────────────────────────────────────────────────────
   const logout = () => {
     sessionStorage.clear();
     navigate("/", { replace: true });
   };
 
-  // ── Drag & drop ──────────────────────────────────────────────────────────────
+  // Drag & Drop
   const onDragOver  = (e) => { e.preventDefault(); setDragging(true); };
-  const onDragLeave = ()  => setDragging(false);
+  const onDragLeave = () => setDragging(false);
   const onDrop      = (e) => {
     e.preventDefault();
     setDragging(false);
     uploadFiles(e.dataTransfer.files);
   };
 
-  // ── Derived state ─────────────────────────────────────────────────────────────
-  const filtered   = files.filter((f) =>
-    f.file_name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered   = files.filter((f) => f.file_name.toLowerCase().includes(search.toLowerCase()));
   const usedBytes  = files.reduce((acc, f) => acc + (f.file_size || 0), 0);
   const limitBytes = user?.size_of_memory || 0;
   const usedPct    = limitBytes > 0 ? Math.min(100, (usedBytes / limitBytes) * 100) : 0;
 
-  const storageFillMod =
-    usedPct > 90 ? " storage-bar__fill--danger" :
-    usedPct > 70 ? " storage-bar__fill--warning" : "";
+  const storageFillMod = usedPct > 90 ? " storage-bar__fill--danger" : usedPct > 70 ? " storage-bar__fill--warning" : "";
 
-  const uploadZoneMod =
-    (dragging  ? " upload-zone--dragging"  : "") +
-    (uploading ? " upload-zone--disabled"  : "");
-
-  // ── Render ────────────────────────────────────────────────────────────────────
+  const uploadZoneMod = (dragging ? " upload-zone--dragging" : "") + (uploading ? " upload-zone--disabled" : "");
 
   return (
-    /* Block: app */
     <div className="app">
-
-      {/* ── Block: app-header ── */}
       <header className="app-header">
-
-        {/* Element: логотип */}
         <div className="app-header__logo">
           <span>☁️</span>
-          <span>CloudStorage</span>
+          <span>{t('appTitle')}</span>
         </div>
 
-        {/* Element: правая группа */}
         <div className="app-header__controls">
-          
-          {/* Block: storage-bar */}
           {limitBytes > 0 && (
             <div className="storage-bar">
               <span className="storage-bar__label">
-                {formatSize(usedBytes)} / {formatSize(limitBytes)}
+                {t('storageUsed', { used: formatSize(usedBytes), limit: formatSize(limitBytes) })}
               </span>
               <div className="storage-bar__track">
-                <div
-                  className={`storage-bar__fill${storageFillMod}`}
-                  style={{ width: `${usedPct}%` }}
-                />
+                <div className={`storage-bar__fill${storageFillMod}`} style={{ width: `${usedPct}%` }} />
               </div>
             </div>
           )}
 
-          {/* Element: имя пользователя */}
-          {user && (
-            <span className="app-header__username">{user.login}</span>
-          )}
+          {user && <span className="app-header__username">{user.login}</span>}
 
-          {/* Element: выход */}
           <button onClick={logout} className="app-header__logout-btn">
-            Выйти
+            {t('logout')}
           </button>
         </div>
       </header>
 
-      {/* ── Block: app-content ── */}
       <main className="app-content">
-
-        {/* Block: error-banner */}
         {error && (
           <div className="error-banner">
             <span className="error-banner__message">{error}</span>
@@ -293,7 +257,6 @@ function Main() {
           </div>
         )}
 
-        {/* Block: upload-zone */}
         <div
           ref={dropRef}
           onDragOver={onDragOver}
@@ -311,34 +274,28 @@ function Main() {
           />
 
           {uploadProg ? (
-            /* Element: прогресс загрузки */
             <div className="upload-zone__progress">
-              <p className="upload-zone__progress-name">Загрузка: {uploadProg.name}</p>
+              <p className="upload-zone__progress-name">{t('uploading', { name: uploadProg.name })}</p>
               <div className="upload-zone__progress-bar">
-                <div
-                  className="upload-zone__progress-fill"
-                  style={{ width: `${uploadProg.pct}%` }}
-                />
+                <div className="upload-zone__progress-fill" style={{ width: `${uploadProg.pct}%` }} />
               </div>
               <p className="upload-zone__progress-pct">{uploadProg.pct}%</p>
             </div>
           ) : (
-            /* Состояние ожидания */
             <>
               <div className="upload-zone__icon">⬆️</div>
-              <p className="upload-zone__prompt">Перетащите файлы сюда</p>
-              <p className="upload-zone__hint">или нажмите для выбора</p>
+              <p className="upload-zone__prompt">{t('uploadZonePrompt')}</p>
+              <p className="upload-zone__hint">{t('uploadZoneHint')}</p>
             </>
           )}
         </div>
 
-        {/* Block: file-toolbar */}
         <div className="file-toolbar">
           <div className="file-toolbar__search">
             <span className="file-toolbar__search-icon">🔍</span>
             <input
               type="text"
-              placeholder="Поиск файлов..."
+              placeholder={t('searchFiles')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="file-toolbar__search-input"
@@ -347,35 +304,29 @@ function Main() {
           <button
             onClick={fetchFiles}
             className="file-toolbar__refresh-btn"
-            title="Обновить"
+            title={t('refresh')}
           >
             🔄
           </button>
         </div>
 
-        {/* Block: file-list */}
         <div className="file-list">
           {filtered.length === 0 ? (
             <div className="file-list__empty">
-              {search ? "Файлы не найдены" : "Нет загруженных файлов"}
+              {search ? t('noFilesFound') : t('noFiles')}
             </div>
           ) : (
             <div className="file-list__table">
-
-              {/* Element: шапка таблицы */}
               <div className="file-list__header">
-                <span className="file-list__header-cell file-list__header-cell--name">Имя файла</span>
-                <span className="file-list__header-cell file-list__header-cell--size">Размер</span>
-                <span className="file-list__header-cell file-list__header-cell--date">Дата</span>
-                <span className="file-list__header-cell file-list__header-cell--actions">Действия</span>
+                <span className="file-list__header-cell file-list__header-cell--name">{t('fileName')}</span>
+                <span className="file-list__header-cell file-list__header-cell--size">{t('size')}</span>
+                <span className="file-list__header-cell file-list__header-cell--date">{t('date')}</span>
+                <span className="file-list__header-cell file-list__header-cell--actions">{t('actions')}</span>
               </div>
 
-              {/* Element: строки */}
               <div className="file-list__rows">
                 {filtered.map((file) => (
                   <div key={file.id} className="file-list__row">
-
-                    {/* Block: file-item — ячейка имени */}
                     <div className="file-item__name-cell">
                       <span className="file-item__icon">{fileIcon(file.file_name)}</span>
                       <span className="file-item__name" title={file.file_name}>
@@ -383,67 +334,25 @@ function Main() {
                       </span>
                     </div>
 
-                    {/* file-item — ячейка размера */}
                     <div className="file-item__size-cell">
                       {formatSize(file.file_size)}
                     </div>
 
-                    {/* file-item — ячейка даты */}
                     <div className="file-item__date-cell">
                       {formatDate(file.uploaded_at)}
                     </div>
 
-                    {/* file-item — ячейка действий */}
                     <div className="file-item__actions-cell">
+                      <button onClick={(e) => { e.stopPropagation(); shareFile(file.id); }} title={t('share')} className="file-actions__btn file-actions__btn--share">🔗</button>
+                      <button onClick={(e) => { e.stopPropagation(); downloadFile(file.id, file.file_name); }} title={t('download')} className="file-actions__btn file-actions__btn--download">⬇️</button>
 
-                      {/* Поделиться */}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); shareFile(file.id); }}
-                        title="Поделиться"
-                        className="file-actions__btn file-actions__btn--share"
-                      >
-                        🔗
-                      </button>
-
-                      {/* Скачать */}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); downloadFile(file.id, file.file_name); }}
-                        title="Скачать"
-                        className="file-actions__btn file-actions__btn--download"
-                      >
-                        ⬇️
-                      </button>
-
-                      {/* Block: file-actions — выпадающее меню */}
                       <div className="file-actions">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenMenuId(openMenuId === file.id ? null : file.id);
-                          }}
-                          title="Больше опций"
-                          className="file-actions__btn file-actions__btn--more"
-                        >
-                          ⋮
-                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === file.id ? null : file.id); }} title={t('moreOptions')} className="file-actions__btn file-actions__btn--more">⋮</button>
 
                         {openMenuId === file.id && (
-                          /* Block: context-menu */
                           <div className="context-menu">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); renameFile(file.id); }}
-                              disabled={renamingId === file.id}
-                              className="context-menu__item"
-                            >
-                              ✏️ Переименовать
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); deleteFile(file.id); }}
-                              disabled={deletingId === file.id}
-                              className="context-menu__item context-menu__item--danger"
-                            >
-                              🗑️ Удалить
-                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); renameFile(file.id); }} disabled={renamingId === file.id} className="context-menu__item">✏️ {t('rename')}</button>
+                            <button onClick={(e) => { e.stopPropagation(); deleteFile(file.id); }} disabled={deletingId === file.id} className="context-menu__item context-menu__item--danger">🗑️ {t('delete')}</button>
                           </div>
                         )}
                       </div>
@@ -454,11 +363,9 @@ function Main() {
             </div>
           )}
 
-          {/* Element: счётчик файлов */}
           {filtered.length > 0 && (
             <p className="file-list__count">
-              {filtered.length} файл{filtered.length === 1 ? "" : filtered.length < 5 ? "а" : "ов"}
-              {search ? ` из ${files.length}` : ""}
+              {t('fileCount', { count: filtered.length })} {search ? t('fromTotal', { total: files.length }) : ""}
             </p>
           )}
         </div>

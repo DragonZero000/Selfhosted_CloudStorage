@@ -5,14 +5,13 @@ import "../styles/login.css";
 import { useTranslation } from 'react-i18next';
 
 function Login() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://127.0.0.1:8000",
-  timeout: 10000,
-});
+  const api = axios.create({
+    baseURL: import.meta.env.VITE_API_URL || "http://127.0.0.1:8000",
+    timeout: 10000,
+  });
 
-function Login() {
   const [mode, setMode]           = useState("login"); // "login" | "register"
   const [formData, setFormData]   = useState({ login: "", password: "", confirm: "" });
   const [error, setError]         = useState("");
@@ -54,11 +53,11 @@ function Login() {
     } catch (err) {
       if (axios.isAxiosError(err)) {
         const status = err.response?.status;
-        if (status === 401)     setError("Неверный логин или пароль");
-        else if (!err.response) setError("Нет подключения к серверу");
-        else                    setError("Ошибка сервера. Попробуйте позже.");
+        if (status === 401)     setError(t('invalidCredentials'));
+        else if (!err.response) setError(t('noServerConnection'));
+        else                    setError(t('serverError'));
       } else {
-        setError("Неизвестная ошибка");
+        setError(t('unknownError'));
       }
     } finally {
       setIsLoading(false);
@@ -69,11 +68,11 @@ function Login() {
     e.preventDefault();
     setError("");
     if (formData.password !== formData.confirm) {
-      setError("Пароли не совпадают");
+      setError(t('passwordsDoNotMatch'));
       return;
     }
     if (formData.password.length < 6) {
-      setError("Пароль должен быть не менее 6 символов");
+      setError(t('passwordMinLength'));
       return;
     }
     setIsLoading(true);
@@ -82,17 +81,17 @@ function Login() {
         login:    formData.login,
         password: formData.password,
       });
-      setSuccess("Аккаунт создан! Теперь войдите.");
+      setSuccess(t('accountCreated'));
       setFormData({ login: formData.login, password: "", confirm: "" });
       setTimeout(() => switchMode("login"), 1500);
     } catch (err) {
       if (axios.isAxiosError(err)) {
         const status = err.response?.status;
         if (status === 400)     setError(err.response.data?.detail || "Логин уже занят");
-        else if (!err.response) setError("Нет подключения к серверу");
-        else                    setError("Ошибка сервера. Попробуйте позже.");
+        else if (!err.response) setError(t('noServerConnection'));
+        else                    setError(t('serverError'));
       } else {
-        setError("Неизвестная ошибка");
+        setError(t('unknownError'));
       }
     } finally {
       setIsLoading(false);
@@ -101,11 +100,10 @@ function Login() {
 
   return (
     <div className="auth-page">
-
       {/* ── Block: auth-logo ── */}
       <div className="auth-logo">
         <span className="auth-logo__icon">☁️</span>
-        <h1 className="auth-logo__title">CloudStorage</h1>
+        <h1 className="auth-logo__title">{t('appTitle')}</h1>
       </div>
 
       {/* ── Block: auth-tabs ── */}
@@ -116,7 +114,7 @@ function Login() {
             onClick={() => switchMode(m)}
             className={`auth-tabs__item${mode === m ? " auth-tabs__item--active" : ""}`}
           >
-            {m === "login" ? "Вход" : "Регистрация"}
+            {m === "login" ? t('login') : t('register')}
           </button>
         ))}
       </div>
@@ -126,9 +124,8 @@ function Login() {
         onSubmit={mode === "login" ? handleLogin : handleRegister}
         className="auth-form"
       >
-        {/* Element: поле логина */}
         <div className="auth-form__field">
-          <label className="auth-form__label">Логин</label>
+          <label className="auth-form__label">{t('username')}</label>
           <input
             type="text"
             name="login"
@@ -141,9 +138,8 @@ function Login() {
           />
         </div>
 
-        {/* Element: поле пароля */}
         <div className="auth-form__field">
-          <label className="auth-form__label">Пароль</label>
+          <label className="auth-form__label">{t('password')}</label>
           <input
             type="password"
             name="password"
@@ -156,10 +152,9 @@ function Login() {
           />
         </div>
 
-        {/* Element: подтверждение пароля (только в режиме регистрации) */}
         {mode === "register" && (
           <div className="auth-form__field">
-            <label className="auth-form__label">Подтверждение пароля</label>
+            <label className="auth-form__label">{t('confirmPassword')}</label>
             <input
               type="password"
               name="confirm"
@@ -173,7 +168,6 @@ function Login() {
           </div>
         )}
 
-        {/* Element: сообщения об ошибке / успехе */}
         {error && (
           <div className="auth-form__alert auth-form__alert--error">{error}</div>
         )}
@@ -181,32 +175,21 @@ function Login() {
           <div className="auth-form__alert auth-form__alert--success">{success}</div>
         )}
 
-        {/* Element: кнопка отправки */}
         <button
           type="submit"
           disabled={isLoading}
           className="auth-form__submit"
         >
           {isLoading ? (
-            /* Block: auth-spinner */
             <span className="auth-spinner">
               <svg className="auth-spinner__icon" viewBox="0 0 24 24" fill="none">
-                <circle
-                  className="auth-spinner__arc"
-                  cx="12" cy="12" r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="auth-spinner__path"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                />
+                <circle className="auth-spinner__arc" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                <path className="auth-spinner__path" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
               </svg>
-              {mode === "login" ? "Вхожу..." : "Создаю..."}
+              {mode === "login" ? t('loggingIn') : t('creating')}
             </span>
           ) : (
-            mode === "login" ? "Войти" : "Создать аккаунт"
+            mode === "login" ? t('enter') : t('createAccount')
           )}
         </button>
       </form>
