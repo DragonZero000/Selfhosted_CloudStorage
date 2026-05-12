@@ -1,0 +1,338 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Block: app
+   Корневая оболочка страницы
+   ══════════════════════════════════════════════════════════════════════════ */
+.app {
+  @apply min-h-screen w-full flex flex-col bg-gray-900 text-gray-100;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Block: app-header
+   Шапка приложения
+   ══════════════════════════════════════════════════════════════════════════ */
+.app-header {
+  @apply flex items-center justify-between px-6 py-3
+         bg-gray-800 border-b border-gray-700 shadow-md;
+}
+
+/* Element: логотип */
+.app-header__logo {
+  @apply flex items-center gap-2 text-xl font-bold;
+}
+
+/* Element: правая группа контролов */
+.app-header__controls {
+  @apply flex items-center gap-4;
+}
+
+/* Element: имя пользователя */
+.app-header__username {
+  @apply text-sm text-gray-400 hidden sm:block;
+}
+
+/* Element: кнопка выхода */
+.app-header__logout-btn {
+  @apply text-sm text-gray-400 border border-gray-600
+         rounded-lg px-3 py-1 transition-colors;
+}
+
+.app-header__logout-btn:hover {
+  @apply text-white border-gray-400;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Block: storage-bar
+   Индикатор использования хранилища в шапке
+   ══════════════════════════════════════════════════════════════════════════ */
+.storage-bar {
+  @apply hidden sm:flex items-center gap-2 text-xs text-gray-400;
+}
+
+/* Element: текст «X MB / Y GB» */
+.storage-bar__label {}
+
+/* Element: дорожка прогресс-бара */
+.storage-bar__track {
+  @apply w-24 h-2 bg-gray-700 rounded-full overflow-hidden;
+}
+
+/* Element: заполнение */
+.storage-bar__fill {
+  @apply h-full rounded-full transition-all bg-blue-500;
+}
+
+/* Modifier: предупреждение (>70 %) */
+.storage-bar__fill--warning {
+  @apply bg-yellow-500;
+}
+
+/* Modifier: критично (>90 %) */
+.storage-bar__fill--danger {
+  @apply bg-red-500;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Block: app-content
+   Основная рабочая область
+   ══════════════════════════════════════════════════════════════════════════ */
+.app-content {
+  @apply flex-1 flex flex-col max-w-5xl w-full mx-auto px-4 py-6 gap-4;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Block: error-banner
+   Уведомление об ошибке с кнопкой закрытия
+   ══════════════════════════════════════════════════════════════════════════ */
+.error-banner {
+  @apply flex items-center justify-between
+         bg-red-900/50 border border-red-700 text-red-200
+         text-sm rounded-lg px-4 py-2;
+}
+
+.error-banner__message {}
+
+.error-banner__close {
+  @apply ml-4 text-red-400;
+}
+
+.error-banner__close:hover {
+  @apply text-white;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Block: upload-zone
+   Зона drag-and-drop загрузки файлов
+   ══════════════════════════════════════════════════════════════════════════ */
+.upload-zone {
+  @apply border-2 border-dashed rounded-xl p-8 text-center
+         cursor-pointer transition-colors select-none
+         border-gray-600;
+}
+
+.upload-zone:hover {
+  @apply border-gray-500 bg-gray-800/50;
+}
+
+/* Modifier: файл перетаскивается над зоной */
+.upload-zone--dragging {
+  @apply border-blue-400 bg-blue-900/20;
+}
+
+/* Modifier: идёт загрузка (неактивна) */
+.upload-zone--disabled {
+  @apply pointer-events-none opacity-50;
+}
+
+/* Element: скрытый file input */
+.upload-zone__input {
+  @apply hidden;
+}
+
+/* Element: блок прогресса загрузки */
+.upload-zone__progress {
+  @apply flex flex-col items-center gap-2;
+}
+
+.upload-zone__progress-name {
+  @apply text-sm text-gray-300;
+}
+
+.upload-zone__progress-bar {
+  @apply w-64 h-2 bg-gray-700 rounded-full overflow-hidden;
+}
+
+.upload-zone__progress-fill {
+  @apply h-full bg-blue-500 rounded-full transition-all;
+}
+
+.upload-zone__progress-pct {
+  @apply text-xs text-gray-500;
+}
+
+/* Element: иконка-стрелка в состоянии ожидания */
+.upload-zone__icon {
+  @apply text-4xl mb-2;
+}
+
+/* Element: основной текст призыва */
+.upload-zone__prompt {
+  @apply text-gray-300 font-medium;
+}
+
+/* Element: вспомогательная подсказка */
+.upload-zone__hint {
+  @apply text-sm text-gray-500 mt-1;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Block: file-toolbar
+   Панель поиска и обновления списка файлов
+   ══════════════════════════════════════════════════════════════════════════ */
+.file-toolbar {
+  @apply flex items-center gap-3;
+}
+
+/* Element: обёртка поиска с иконкой */
+.file-toolbar__search {
+  @apply relative flex-1;
+}
+
+.file-toolbar__search-icon {
+  @apply absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm;
+}
+
+.file-toolbar__search-input {
+  @apply w-full bg-gray-800 border border-gray-700 rounded-lg
+         pl-9 pr-3 py-2 text-sm outline-none;
+}
+
+.file-toolbar__search-input:focus {
+  @apply border-blue-500;
+}
+
+/* Element: кнопка «Обновить» */
+.file-toolbar__refresh-btn {
+  @apply text-sm border border-gray-700 rounded-lg px-3 py-2
+         text-gray-400 transition-colors;
+}
+
+.file-toolbar__refresh-btn:hover {
+  @apply border-gray-500 text-white;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Block: file-list
+   Список загруженных файлов
+   ══════════════════════════════════════════════════════════════════════════ */
+.file-list {
+  @apply flex-1;
+}
+
+/* Element: заглушка «нет файлов» */
+.file-list__empty {
+  @apply text-center py-16 text-gray-500;
+}
+
+/* Element: таблица (обёртка с бордером) */
+.file-list__table {
+  @apply overflow-hidden rounded-xl border border-gray-700;
+}
+
+/* Element: шапка таблицы */
+.file-list__header {
+  @apply grid grid-cols-12 gap-2 px-4 py-2
+         bg-gray-800 text-xs text-gray-500 font-medium
+         uppercase tracking-wider border-b border-gray-700;
+}
+
+/* Element: ячейка шапки (базовая) */
+.file-list__header-cell {}
+
+.file-list__header-cell--name    { @apply col-span-5; }
+.file-list__header-cell--size    { @apply col-span-2 text-right; }
+.file-list__header-cell--date    { @apply col-span-2 text-right hidden sm:block; }
+.file-list__header-cell--actions { @apply col-span-3 text-right; }
+
+/* Element: контейнер строк */
+.file-list__rows {
+  @apply divide-y divide-gray-700/50;
+}
+
+/* Element: строка файла */
+.file-list__row {
+  @apply grid grid-cols-12 gap-2 px-4 py-3 items-center
+         transition-colors relative;
+}
+
+.file-list__row:hover {
+  @apply bg-gray-800/50;
+}
+
+/* Element: счётчик «N файлов» */
+.file-list__count {
+  @apply text-xs text-gray-600 text-right mt-2;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Block: file-item
+   Ячейки внутри одной строки file-list__row
+   ══════════════════════════════════════════════════════════════════════════ */
+.file-item__name-cell {
+  @apply col-span-5 flex items-center gap-2 min-w-0;
+}
+
+.file-item__icon {
+  @apply text-lg shrink-0;
+}
+
+.file-item__name {
+  @apply text-sm truncate;
+}
+
+.file-item__size-cell {
+  @apply col-span-2 text-right text-sm text-gray-400;
+}
+
+.file-item__date-cell {
+  @apply col-span-2 hidden sm:block text-right text-xs text-gray-500;
+}
+
+.file-item__actions-cell {
+  @apply col-span-3 flex items-center justify-end gap-1;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Block: file-actions
+   Кнопки действий для каждого файла
+   ══════════════════════════════════════════════════════════════════════════ */
+.file-actions {
+  @apply relative;
+}
+
+/* Element: базовая кнопка-иконка */
+.file-actions__btn {
+  @apply p-2 rounded-lg text-gray-400 transition-colors text-base
+         flex items-center justify-center w-9 h-9;
+}
+
+/* Modifier: поделиться */
+.file-actions__btn--share    { @apply hover:bg-green-600/20 hover:text-green-400; }
+
+/* Modifier: скачать */
+.file-actions__btn--download { @apply hover:bg-blue-600/20 hover:text-blue-400; }
+
+/* Modifier: «ещё» (⋮) */
+.file-actions__btn--more     { @apply hover:bg-gray-600/50 hover:text-white; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Block: context-menu
+   Выпадающее меню (переименовать / удалить)
+   ══════════════════════════════════════════════════════════════════════════ */
+.context-menu {
+  @apply absolute right-0 mt-1 w-48
+         bg-gray-800 border border-gray-700
+         rounded-lg shadow-xl z-50 py-1 text-sm;
+}
+
+/* Element: пункт меню */
+.context-menu__item {
+  @apply w-full text-left px-4 py-2
+         flex items-center gap-2 text-gray-300 transition-colors;
+}
+
+.context-menu__item:hover:not(:disabled) {
+  @apply bg-gray-700;
+}
+
+.context-menu__item:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Modifier: опасное действие (удаление) */
+.context-menu__item--danger {
+  @apply text-red-400;
+}
+
+.context-menu__item--danger:hover:not(:disabled) {
+  @apply bg-red-900/50;
+}

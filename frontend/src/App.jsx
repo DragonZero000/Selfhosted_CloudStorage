@@ -7,7 +7,7 @@ function App() {
   return (
     <Routes>
       <Route path="/"     element={
-        <main className="min-h-screen flex items-center justify-center bg-gray-900">
+        <main className="auth-layout">
           <Login />
         </main>
       } />
