@@ -83,11 +83,16 @@ def upload_file(
     file: UploadFile = FastAPIFile(...),
     current_user: User = Depends(get_current_user),
 ):
-    contents = file.file.read()
-    file_size = len(contents)
+    # В новых версиях FastAPI/Starlette размер доступен через file.size
+    file_size = file.size if hasattr(file, "size") and file.size is not None else 0
+    
+    # Если размер не определен, пробуем определить через seek/tell
+    if file_size == 0:
+        file.file.seek(0, os.SEEK_END)
+        file_size = file.file.tell()
+        file.file.seek(0)
 
     # ── Проверка лимита хранилища ─────────────────────────────────────────────
-    # size_of_memory == 0 означает что загрузка заблокирована администратором
     limit = current_user.size_of_memory or 0
     used  = current_user.storage_used  or 0
 
@@ -121,12 +126,14 @@ def upload_file(
         s3_key = f"{current_user.login}/{int(time.time())}_{file.filename}"
 
     try:
-        s3.put_object(
-            Bucket=BUCKET,
-            Key=s3_key,
-            Body=io.BytesIO(contents),
-            ContentLength=file_size,
-            ContentType=file.content_type or "application/octet-stream",
+        # Используем upload_fileobj для потоковой загрузки (не грузим файл целиком в RAM)
+        s3.upload_fileobj(
+            file.file,
+            BUCKET,
+            s3_key,
+            ExtraArgs={
+                "ContentType": file.content_type or "application/octet-stream"
+            }
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
