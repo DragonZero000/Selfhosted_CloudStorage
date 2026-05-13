@@ -6,7 +6,7 @@ import "../styles/main.css";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://127.0.0.1:8000",
-  timeout: 30000,
+  timeout: 1800000, // No timeout for large uploads
 });
 
 function authHeader() {

@@ -9,7 +9,12 @@ darkoktestserver.twilightparadox.com {
         request_body {
             max_size 5GB
         }
-        reverse_proxy backend:8000
+        reverse_proxy backend:8000 {
+            transport http {
+                read_timeout 3600s
+                write_timeout 3600s
+            }
+        }
     }
 
     handle {
