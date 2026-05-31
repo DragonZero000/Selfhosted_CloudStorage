@@ -1,3 +1,7 @@
+# Загрузите переменные окружения из .env файла
+env_file:
+  - .env
+
 services:
 
   # ── PostgreSQL ──────────────────────────────────────────────────────────────
@@ -27,6 +31,7 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: miniopass
     ports:
+      - "9000:9000"   # MinIO S3 API — для публичного доступа к presigned URL
       - "9001:9001"   # MinIO Console — только для администрирования
     volumes:
       - minio_data:/data
@@ -61,7 +66,7 @@ services:
     environment:
       DATABASE_URL:       postgresql://postgres:pass@postgres:5432/appdb
       MINIO_INTERNAL_URL: http://minio:9000
-      MINIO_PUBLIC_URL:   http://minio:9000   # внутри Docker всё ходит через backend
+      MINIO_PUBLIC_URL:   ${MINIO_PUBLIC_URL:-http://localhost:9000}
       MINIO_ACCESS_KEY:   minioadmin
       MINIO_SECRET_KEY:   miniopass
       S3_BUCKET:          cloudstorage
