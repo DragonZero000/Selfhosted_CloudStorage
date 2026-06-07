@@ -1,7 +1,3 @@
-# Загрузите переменные окружения из .env файла
-env_file:
-  - .env
-
 services:
 
   # ── PostgreSQL ──────────────────────────────────────────────────────────────
@@ -46,13 +42,16 @@ services:
     image: minio/mc
     container_name: CloudStorage-minio-init
     restart: "no"
+    # Добавлено сюда, так как внутри entrypoint переменные используются напрямую контейнером
+    env_file:
+      - .env
     depends_on:
       minio:
         condition: service_healthy
     entrypoint: >
       /bin/sh -c "
-      mc alias set myminio http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY};
-      mc mb --ignore-existing myminio/${S3_BUCKET:-cloudstorage};
+      mc alias set myminio http://minio:9000 \${MINIO_ACCESS_KEY} \${MINIO_SECRET_KEY};
+      mc mb --ignore-existing myminio/\${S3_BUCKET:-cloudstorage};
       echo 'Bucket ready';
       "
 
