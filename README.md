@@ -118,6 +118,43 @@ chmod +x install.sh
    Caddy автоматически получит и продлит TLS-сертификат Let's Encrypt для указанного
    домена, приложение будет доступно на `https://ваш-домен`.
 
+## Управление пользователями (db.py CLI)
+
+По умолчанию у новых пользователей лимит хранилища равен `0` — загрузка файлов
+заблокирована, пока администратор не выдаст лимит вручную. Для этого в `db.py`
+есть встроенная интерактивная консоль администратора.
+
+Запустите её внутри уже работающего контейнера backend:
+
+```bash
+docker compose exec backend python db.py
+```
+
+(для production-режима: `docker compose -f docker-compose.prod.yml exec backend python db.py`)
+
+Откроется интерактивный режим с командами:
+
+| Команда     | Действие                                                              |
+|-------------|-------------------------------------------------------------------------|
+| `get_user`  | Показать одного пользователя (логин, использовано/лимит места, дата создания) |
+| `get_users` | Показать всех пользователей и их лимиты                                |
+| `add_user`  | Создать пользователя вручную (логин, пароль, лимит в байтах)           |
+| `del_user`  | Удалить пользователя (с подтверждением)                                |
+| `set_limit` | Изменить лимит хранилища пользователя в байтах (например, `1073741824` = 1 GB) |
+| `exit`      | Выйти из консоли                                                        |
+
+Пример — выдать пользователю `ivan` лимит в 5 GB:
+
+```
+$ docker compose exec backend python db.py
+Commands: get_user | get_users | add_user | del_user | set_limit | exit
+> set_limit
+Login: ivan
+New limit in bytes (0 = block, e.g. 1073741824 = 1GB): 5368709120
+Updated
+> exit
+```
+
 ## Управление
 
 ```bash
@@ -140,19 +177,47 @@ docker compose up -d --build
 
 ```
 .
-├── backend/                  # FastAPI-приложение
-│   ├── CloudStorage.py       # точка входа
-│   ├── authorization.py      # регистрация, вход, JWT
-│   ├── storage.py            # загрузка/скачивание/шаринг файлов
-│   ├── db.py                 # модели SQLAlchemy (User, File)
-│   └── requirements.txt
-├── frontend/                 # React SPA (Vite)
-├── docker-compose.yml        # локальный запуск
-├── docker-compose.prod.yml   # production запуск (+ Caddy, HTTPS)
-├── Caddyfile                 # конфиг reverse-proxy для прод-режима
-├── config.yaml               # справочный файл с настройками по умолчанию
-├── .env                      # переменные окружения (создаётся install.sh)
-└── install.sh                # автоматический установщик
+├── backend/                        # FastAPI-приложение
+│   ├── CloudStorage.py             # точка входа (uvicorn CloudStorage:app)
+│   ├── authorization.py            # регистрация, вход, JWT, FastAPI app + CORS
+│   ├── storage.py                  # загрузка/скачивание/переименование/шаринг файлов (роуты /files)
+│   ├── db.py                       # модели SQLAlchemy (User, File) + CRUD + интерактивный CLI (см. ниже)
+│   ├── CloudStorage-postgres.sql   # справочная SQL-схема (реальные таблицы создаёт db.py при старте)
+│   ├── requirements.txt            # python-зависимости backend
+│   ├── Dockerfile                  # сборка образа backend
+│   └── dockerignore
+│
+├── frontend/                       # React SPA (Vite + bun)
+│   ├── src/
+│   │   ├── App.jsx                 # корневой компонент, роутинг
+│   │   ├── main.jsx                # точка входа React
+│   │   ├── i18n.js                 # инициализация i18next
+│   │   ├── App.css / index.css
+│   │   ├── components/
+│   │   │   ├── themeswitcher.jsx   # переключатель светлой/тёмной темы
+│   │   │   └── languageswitcher.jsx# переключатель языка (RU/EN)
+│   │   ├── pages/
+│   │   │   ├── login.jsx           # страница входа/регистрации
+│   │   │   └── main.jsx            # основная страница — список файлов
+│   │   ├── locales/
+│   │   │   ├── ru.json             # переводы RU
+│   │   │   └── en.json             # переводы EN
+│   │   └── styles/                 # css для отдельных страниц/компонентов
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── nginx.conf                  # конфиг nginx внутри контейнера (прокси /api → backend, SPA fallback)
+│   ├── Dockerfile                  # сборка (bun build → nginx)
+│   ├── package.json / bun.lock / package-lock.json
+│   ├── eslint.config.js
+│   └── dockerignore
+│
+├── docker-compose.yml              # локальный запуск (без HTTPS)
+├── docker-compose.prod.yml         # production запуск (+ Caddy, HTTPS)
+├── Caddyfile                       # конфиг reverse-proxy для прод-режима
+├── config.yaml                     # справочный файл с настройками по умолчанию
+├── .env                            # переменные окружения (создаётся install.sh)
+├── install.sh                      # автоматический установщик
+└── README.md
 ```
 
 ## Переменные окружения
@@ -174,7 +239,3 @@ docker compose up -d --build
 - Не открывайте порт `9001` (консоль MinIO) наружу без необходимости.
 - Используйте production-режим (`docker-compose.prod.yml`) с HTTPS для любого сервера, доступного из интернета.
 - Регулярно делайте резервные копии volume'ов `postgres_data` и `minio_data`.
-
-## Лицензия
-
-См. файл `LICENSE` в репозитории (если присутствует), либо уточните у автора проекта.
