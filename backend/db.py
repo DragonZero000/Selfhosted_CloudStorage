@@ -8,8 +8,30 @@ import os
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:pass@localhost:5432/appdb")
 
 Base = declarative_base()
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(bind=engine)
+
+# Lazy engine creation — avoid connecting on import (psycopg2 fails with UnicodeDecodeError).
+# `engine` / `SessionLocal` start out as None and are only created on first real
+# DB use (see `_get_session` below). Tests bypass this entirely by monkeypatching
+# `db.engine` / `db.SessionLocal` directly (see conftest.py) *before* any CRUD
+# function runs — since every CRUD function re-reads the module-level
+# `SessionLocal` name at call time, the monkeypatched value is what actually
+# gets used, and production code never needs to touch the real database at
+# import time.
+engine = None
+SessionLocal = None
+
+
+def _get_session():
+    """Return a new DB session, creating the real engine/sessionmaker lazily
+    on first use. If `db.SessionLocal` has already been set (e.g. by a test
+    fixture via monkeypatch), that is used as-is and nothing is (re)created.
+    """
+    global engine, SessionLocal
+    if SessionLocal is None:
+        engine = create_engine(DATABASE_URL)
+        Base.metadata.create_all(bind=engine)
+        SessionLocal = sessionmaker(bind=engine)
+    return SessionLocal()
 
 
 # ─── Models ───────────────────────────────────────────────────────────────────
@@ -36,9 +58,6 @@ class File(Base):
     user        = relationship("User", back_populates="files")
 
 
-Base.metadata.create_all(bind=engine)
-
-
 # ─── Password hashing ─────────────────────────────────────────────────────────
 
 ph = PasswordHasher(
@@ -59,7 +78,7 @@ def get_password_hash(password: str) -> str:
 # ─── User CRUD ────────────────────────────────────────────────────────────────
 
 def get_user_data(login: str):
-    session = SessionLocal()
+    session = _get_session()
     try:
         return session.query(User).filter_by(login=login).first()
     finally:
@@ -67,7 +86,7 @@ def get_user_data(login: str):
 
 
 def get_users_data():
-    session = SessionLocal()
+    session = _get_session()
     try:
         return session.query(User).all()
     finally:
@@ -80,7 +99,7 @@ def insert_user_data(login: str, password_hash: str, size_of_memory: float = 0):
     size_of_memory — лимит хранилища в байтах.
     0 = загрузка заблокирована (по умолчанию для новых пользователей).
     """
-    session = SessionLocal()
+    session = _get_session()
     try:
         session.add(User(
             login=login,
@@ -98,7 +117,7 @@ def insert_user_data(login: str, password_hash: str, size_of_memory: float = 0):
 
 
 def delete_user_data(login: str):
-    session = SessionLocal()
+    session = _get_session()
     try:
         user = session.query(User).filter_by(login=login).first()
         if not user:
@@ -115,7 +134,7 @@ def delete_user_data(login: str):
 
 
 def update_user_storage(user_id: int, delta: float):
-    session = SessionLocal()
+    session = _get_session()
     try:
         user = session.query(User).filter_by(id=user_id).first()
         if user:
@@ -133,7 +152,7 @@ def update_user_by_login(login: str, **kwargs):
     Защищённые поля (нельзя менять): id, storage_used, files.
     """
     protected = {"id", "storage_used", "files"}
-    session = SessionLocal()
+    session = _get_session()
     try:
         user = session.query(User).filter_by(login=login).first()
         if not user:
@@ -155,21 +174,21 @@ def update_user_by_login(login: str, **kwargs):
 # ─── File CRUD ────────────────────────────────────────────────────────────────
 
 def get_user_files(user_id: int):
-    session = SessionLocal()
+    session = _get_session()
     try:
         return session.query(File).filter_by(user_id=user_id).order_by(File.uploaded_at.desc()).all()
     finally:
         session.close()
 
 def get_file(file_id: int, user_id: int):
-    session = SessionLocal()
+    session = _get_session()
     try:
         return session.query(File).filter_by(id=file_id, user_id=user_id).first()
     finally:
         session.close()
 
 def insert_file(user_id: int, file_name: str, s3_key: str, file_size: float = 0):
-    session = SessionLocal()
+    session = _get_session()
     try:
         f = File(user_id=user_id, file_name=file_name, s3_key=s3_key, file_size=file_size)
         session.add(f)
@@ -186,7 +205,7 @@ def insert_file(user_id: int, file_name: str, s3_key: str, file_size: float = 0)
         session.close()
 
 def delete_file_record(file_id: int, user_id: int) -> bool:
-    session = SessionLocal()
+    session = _get_session()
     try:
         f = session.query(File).filter_by(id=file_id, user_id=user_id).first()
         if not f:
@@ -206,7 +225,7 @@ def delete_file_record(file_id: int, user_id: int) -> bool:
 
 def rename_file(file_id: int, user_id: int, new_name: str) -> bool:
     """Rename file in database"""
-    session = SessionLocal()
+    session = _get_session()
     try:
         f = session.query(File).filter_by(id=file_id, user_id=user_id).first()
         if not f:

@@ -72,51 +72,67 @@ chmod +x install.sh
 
 Если не хотите использовать скрипт:
 
-1. Скопируйте `.env.example` (или отредактируйте `.env`) и заполните:
+1. Отредактируйте `.env` (файл уже присутствует в репозитории) и заполните:
 
-   ```env
-   POSTGRES_USER=cloudstorage
-   POSTGRES_PASSWORD=надёжный_пароль
-   POSTGRES_DB=appdb
+    ```env
+    POSTGRES_USER=cloudstorage
+    POSTGRES_PASSWORD=надёжный_пароль
+    POSTGRES_DB=appdb
 
-   MINIO_ACCESS_KEY=надёжный_логин
-   MINIO_SECRET_KEY=надёжный_пароль
+    MINIO_ACCESS_KEY=надёжный_логин
+    MINIO_SECRET_KEY=надёжный_пароль
 
-   S3_BUCKET=cloudstorage
+    S3_BUCKET=cloudstorage
 
-   # Сгенерировать: openssl rand -hex 32
-   SECRET_KEY=сгенерированный_ключ
+    # Сгенерировать: openssl rand -hex 32
+    SECRET_KEY=сгенерированный_ключ
 
-   # Публичный адрес сервера (домен или IP), доступный из браузера
-   MINIO_PUBLIC_URL=http://ВАШ_IP_ИЛИ_ДОМЕН:9000
-   ```
+    # Публичный адрес сервера (домен или IP), доступный из браузера
+    MINIO_PUBLIC_URL=http://ВАШ_IP_ИЛИ_ДОМЕН:9000
+    ```
 
 2. **Локальный запуск** (без HTTPS, для разработки/локальной сети):
 
-   ```bash
-   docker compose up -d --build
-   ```
+    ```bash
+    docker compose up -d --build
+    ```
 
-   Приложение будет доступно на `http://localhost` (порт 80).
+    Приложение будет доступно на `http://localhost` (порт 80).
 
 3. **Production-запуск** (с доменом и HTTPS через Caddy):
 
    Отредактируйте `Caddyfile`, указав свой домен вместо примера в первой строке:
 
-   ```
-   cloud.example.com {
-       ...
-   }
-   ```
+    ```
+    cloud.example.com {
+        ...
+    }
+    ```
 
    Затем запустите:
 
-   ```bash
-   docker compose -f docker-compose.prod.yml up -d --build
-   ```
+    ```bash
+    docker compose -f docker-compose.prod.yml up -d --build
+    ```
 
    Caddy автоматически получит и продлит TLS-сертификат Let's Encrypt для указанного
    домена, приложение будет доступно на `https://ваш-домен`.
+
+## Запуск тестов (backend)
+
+Backend-часть проекта покрыта unit-тестами. Для запуска:
+
+```bash
+cd backend
+pip install -r requirements.txt -r requirements-test.txt
+pytest
+```
+
+Или с использованием Docker:
+
+```bash
+docker compose exec backend python -m pytest
+```
 
 ## Управление пользователями (db.py CLI)
 
@@ -184,6 +200,13 @@ docker compose up -d --build
 │   ├── db.py                       # модели SQLAlchemy (User, File) + CRUD + интерактивный CLI (см. ниже)
 │   ├── CloudStorage-postgres.sql   # справочная SQL-схема (реальные таблицы создаёт db.py при старте)
 │   ├── requirements.txt            # python-зависимости backend
+│   ├── requirements-test.txt       # зависимости для тестирования (pytest, httpx и др.)
+│   ├── pytest.ini                  # конфигурация pytest
+│   ├── conftest.py                 # общие fixtures для тестов
+│   ├── test_authorization.py       # unit-тесты авторизации
+│   ├── test_db.py                  # unit-тесты базы данных
+│   ├── test_storage.py             # unit-тесты хранения файлов
+│   ├── test_cloudstorage.py        # unit-тесты основного приложения
 │   ├── Dockerfile                  # сборка образа backend
 │   └── dockerignore
 │
@@ -232,6 +255,7 @@ docker compose up -d --build
 | `S3_BUCKET`            | Название бакета для хранения файлов                                  | `cloudstorage`         |
 | `SECRET_KEY`           | Ключ для подписи JWT-токенов (`openssl rand -hex 32`)                | —                      |
 | `MINIO_PUBLIC_URL`     | Публичный адрес MinIO, доступный из браузера (для ссылок на скачивание) | `http://localhost:9000` |
+| `MINIO_INTERNAL_URL`   | Внутренний адрес MinIO для backend (в Docker-сети)                   | `http://minio:9000`    |
 
 ## Безопасность перед продом
 
