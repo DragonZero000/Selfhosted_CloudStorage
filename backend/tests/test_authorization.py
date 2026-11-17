@@ -5,7 +5,7 @@ import pytest
 from datetime import timedelta
 from unittest.mock import patch, MagicMock
 
-sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # NOTE: mock_env, isolated_db, mock_s3_clients and client all come from
 # conftest.py (autouse where relevant) - no need to redefine them here.

@@ -4,3 +4,7 @@ __pycache__
 *.pyo
 .idea
 *.egg-info
+venv
+tests
+.pytest_cache
+.env

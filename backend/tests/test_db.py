@@ -4,7 +4,7 @@ import sys
 import pytest
 from unittest.mock import patch, MagicMock
 
-sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # NOTE: mock_env and isolated_db (in-memory SQLite + schema) come from
 # conftest.py and are applied automatically to every test in this file.

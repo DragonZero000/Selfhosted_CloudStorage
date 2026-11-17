@@ -72,7 +72,7 @@ chmod +x install.sh
 
 Если не хотите использовать скрипт:
 
-1. Отредактируйте `.env` (файл уже присутствует в репозитории) и заполните:
+1. Скопируйте шаблон (`cp .env.example .env`), отредактируйте `.env` и заполните:
 
     ```env
     POSTGRES_USER=cloudstorage
@@ -202,13 +202,9 @@ docker compose up -d --build
 │   ├── requirements.txt            # python-зависимости backend
 │   ├── requirements-test.txt       # зависимости для тестирования (pytest, httpx и др.)
 │   ├── pytest.ini                  # конфигурация pytest
-│   ├── conftest.py                 # общие fixtures для тестов
-│   ├── test_authorization.py       # unit-тесты авторизации
-│   ├── test_db.py                  # unit-тесты базы данных
-│   ├── test_storage.py             # unit-тесты хранения файлов
-│   ├── test_cloudstorage.py        # unit-тесты основного приложения
+│   ├── tests/                      # unit-тесты (pytest): conftest.py + test_*.py
 │   ├── Dockerfile                  # сборка образа backend
-│   └── dockerignore
+│   └── .dockerignore
 │
 ├── frontend/                       # React SPA (Vite + bun)
 │   ├── src/
@@ -230,15 +226,17 @@ docker compose up -d --build
 │   ├── vite.config.js
 │   ├── nginx.conf                  # конфиг nginx внутри контейнера (прокси /api → backend, SPA fallback)
 │   ├── Dockerfile                  # сборка (bun build → nginx)
-│   ├── package.json / bun.lock / package-lock.json
+│   ├── package.json / bun.lock
 │   ├── eslint.config.js
-│   └── dockerignore
+│   └── .dockerignore
 │
 ├── docker-compose.yml              # локальный запуск (без HTTPS)
 ├── docker-compose.prod.yml         # production запуск (+ Caddy, HTTPS)
 ├── Caddyfile                       # конфиг reverse-proxy для прод-режима
 ├── config.yaml                     # справочный файл с настройками по умолчанию
-├── .env                            # переменные окружения (создаётся install.sh)
+├── .env.example                    # шаблон переменных окружения
+├── .env                            # создаётся install.sh, не коммитится
+├── LICENSE                         # MIT
 ├── install.sh                      # автоматический установщик
 └── README.md
 ```

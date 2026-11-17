@@ -7,7 +7,7 @@ from unittest.mock import patch, MagicMock, call
 from datetime import datetime
 from botocore.exceptions import ClientError
 
-sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # NOTE: mock_env, isolated_db and mock_s3_clients all come from conftest.py
 # and apply automatically to every test in this file.
